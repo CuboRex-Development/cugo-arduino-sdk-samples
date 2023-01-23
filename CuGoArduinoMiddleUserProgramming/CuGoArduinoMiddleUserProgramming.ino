@@ -15,93 +15,50 @@
  * limitations under the License.                                           *
  ****************************************************************************/
 /*****************CugoArduinoBeginnerProgramming ver1.00*********************/
+/****************************************************************************
+ * CugoArduinoBeginnerProgrammingをご利用される方へ
+ *  スクロールして「Arduino学習用プログラミングはここから」からご確認ください。
+ *  詳細はREADME.mdをご確認ください。
+ ****************************************************************************/
 #include <Arduino.h>
 #include <Servo.h>
 #include <SPI.h>
-#include "CugoArduinoMiddle.h"
+#include "CugoArduinoMode.h"
 #include "MotorController.h"
-/*
-- 中級者向けプログラミング
-  - やりたいこと：ライブラリ化(motorcontrollerとの切り分け)
-    - loop内を自由に扱えるようにしたい
-    - 割り込みはちゃんと機能してほしい（delayは除く）
-    - set upに一つ宣言するだけ（ピン配置や設定パラメータも外部関数化）
-  - ライブラリ利用時のinoファイル内の宣言や関数一覧
-    - インクルード関連
-      -  #include "Cugo_MotorController.h"
-      -  #include "Cugo_Function_xx.h"機能部分け
-      -  ※こちらはユーザに宣言してもらう：#include <Servo.h> , #include <SPI.h>
-    - グローバル変数関数関連
-      - 割り込み関連（ベタ打ちしてもらう）
-        - ヘッダ内ににコメントつけておく（サンプルコードとかは出す）
-    - set_up関数内
-      - set_up_cugo_arduinokit(正転後転設定,ピン配置,)
-      - MotorController motor_controllers[2];　オブジェクトのインスタンス化
-    - その他関数（loop内やユーザ自作関数内での動作を想定）：：★loopの中で自動走行モードラジコンの二つの関数を作成してもらう。サンプルスケッチで説明（RCモードがいらないなら消してよい）
-      - cugo_motor_rpm_L(float) 速度指定正負で正転後転 rpmとm/sでそれぞれほしい。
-      - cugo_get_rpm_L()  モーターの速度を計測 rpmとm/sでそれぞれほしい。
-      - cugo_go_straight(float); 前進制御 mで指定
-      - cugo_turn(float); 回転 右回り正回転する度数を指定（正負対応）degreeとradianそれぞれ欲しい
-      - cugo_get_button_value(); 今この瞬間がおされているのか？
-      - cugo_count_button_times(); ボタンの押された回数 A2 PCINTで見る必要あり 
-      - cugo_check_rc_mode(); loop内に入れるこの中でラジコン操作　おまじない。フラグ分ける　ifで分岐
-      - cugo_chanege_rc_mode();自動走行モードからラジコンモードにプログラムで切り替える 
-      - cugo_check_distance_L(); 左クローラーの移動距離を算出　LとR　合成(distanceとdegree からベクトル方向と距離) 
-      - cugo_reset_distance_L(); 左クローラーの移動距離を初期化
-      - cugo_stop(); 強制的にcugoのクローラー動作を停止
-      - カウント数のデータ取得と初期化　
-      - check_a_channel_value()  ：ラジコン操作の数値（abc）
-      - delayの代替になるもの　cugo_wait_ms();
-  - 課題
-    - 割り込み関連まとめたいけど、ライブラリ内で宣言するのは危険
-      - READMEかサンプルコードで割り込み関数をコピペしてもらう
-    - モード切替のフラグ処理
-      - 現行はloopを高速に回ることで対応しているからloop一周しか使わない人とかには利用できない。
-      - そもそも自動走行モードとラジコンモードという概念がいるのか？
-      - 唐突のラジコンモードに切り替えた後のloop処理はどこから戻る？
-    - その他生データの利用
-      - 他にも出せそうならものはできるだけ出しておく
-*/
 
-//プロトタイプ宣言★廃止予定
+//プロトタイプ宣言
 void CMD_EXECUTE();
 
-
-MotorController motor_controllers[2];//利用するモーターの宣言
+//利用するモーター数の宣言
+MotorController motor_controllers[2];
 
 //初期設定
 void setup()
 {
   Serial.begin(115200);
-  set_up_cugo_arduino_middle();//CugoArduinoMiddleの初期設定
-  /*
-  //init_display();//★廃止予定
+  init_display();
   init_PID();
   init_KOPROPO(runMode,OLD_PWM_IN_PIN0_VALUE,OLD_PWM_IN_PIN1_VALUE,OLD_PWM_IN_PIN2_VALUE);
   init_ARDUINO_CMD();
   init_SPI();
-  */
 }
 
 //loop内を繰り返し実行
 void loop()
 {
-
-  //samplecode
-  
-/*  current_time = micros();  // オーバーフローまで約40分
+  current_time = micros();  // オーバーフローまで約40分
   if (current_time - prev_time_10ms > 10000) 
   {
     job_10ms();
     prev_time_10ms = current_time;
   }
   display_detail(motor_controllers);//必要に応じてCugoArduinoModeの5～8行目を変更
-*/
 }
 
 //割り込み処理
 ISR(PCINT2_vect)
-{
+{ 
+  
   if (OLD_PWM_IN_PIN0_VALUE != digitalRead(PWM_IN_PIN0))
   {
     if (LOW == OLD_PWM_IN_PIN0_VALUE)
@@ -194,7 +151,7 @@ void check_mode_change()
   }
 }
 
-//割り込み時の実行処理関連//残す前提で
+//割り込み時の実行処理関連
 void init_PID()
 {
   //Serial.println(F("#   init_PID"));//確認用
@@ -229,14 +186,10 @@ void rightEncHandler()
   motor_controllers[MOTOR_RIGHT].updateEnc();
 }
 //10ミリ秒毎に実行
-
-//廃止予定
-/*
 void job_10ms()
 {
   check_mode_change();
 }
-*/
 
 /***** Arduino学習用プログラミングはここから *****/
 /* ヒント：使えるコマンドリスト */
@@ -265,7 +218,7 @@ void job_10ms()
  *    turn_clockwise(60,90);         //上限速度90rpmで60度右に回転する      □詳細：()内に回転角度と上限速度を設定。上限速度は最大180rpmで距離が短いと上限速度に到達しない場合もある。
  *    turn_counter_clockwise(60,90); //上限速度90rpmで60度左に回転する      □詳細：()内の設定はturn_clockwise(60,90)と同様
 */
-/*
+
 //コマンドの実行
 void CMD_EXECUTE()
 {
@@ -301,4 +254,3 @@ void CMD_EXECUTE()
 
   cmd_end(motor_controllers);      // おまじない
 }
-*/
