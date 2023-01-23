@@ -23,36 +23,46 @@
 #include <Arduino.h>
 #include <Servo.h>
 #include <SPI.h>
-#include "CugoArduinoMode.h"
+#include "CugoArduinoMiddle.h"
 #include "MotorController.h"
 
 //プロトタイプ宣言
-void CMD_EXECUTE();
+//void CMD_EXECUTE();//★消す
+void(*resetFunc)(void) = 0;
+
 
 //利用するモーター数の宣言
-MotorController motor_controllers[2];
+MotorController cugo_motor_controllers[MOTOR_NUM];
 
 //初期設定
 void setup()
 {
   Serial.begin(115200);
-  init_display();
-  init_PID();
-  init_KOPROPO(runMode,OLD_PWM_IN_PIN0_VALUE,OLD_PWM_IN_PIN1_VALUE,OLD_PWM_IN_PIN2_VALUE);
-  init_ARDUINO_CMD();
-  init_SPI();
+  cugo_setup_middle();
+
 }
 
 //loop内を繰り返し実行
 void loop()
 {
-  current_time = micros();  // オーバーフローまで約40分
+  cugo_check_mode_change();
+  if (cugoRunMode == CUGO_RC_MODE){
+    cugo_rcmode(cugoRcTime,cugo_motor_controllers);//RC（ラジコン）操作
+  }
+  if (cugoRunMode == CUGO_ARDUINO_MODE){//ここから自動走行モードの記述 //★Arduinomodeではなくself-driveが良い？
+  //サンプルコード記載
+  
+  }
+  
+  //current_time = micros();  // オーバーフローまで約40分
+  /*
   if (current_time - prev_time_10ms > 10000) 
   {
     job_10ms();
     prev_time_10ms = current_time;
   }
-  display_detail(motor_controllers);//必要に応じてCugoArduinoModeの5～8行目を変更
+  //display_detail(cugo_motor_controllers);//必要に応じてCugoArduinoModeの5～8行目を変更
+  */
 }
 
 //割り込み処理
@@ -80,6 +90,24 @@ ISR(PCINT2_vect)
     else
     { // 立下り時の処理
       PIN_DOWN(1);
+      if (CUGO_ARDUINO_MODE_IN < time[1])
+      { //KOPPROのBchを右に倒すとArduinoリセット
+      cugo_Bch_flag = false;
+      resetFunc();
+      }else if (CUGO_ARDUINO_MODE_OUT > time[1])
+      { //KOPPROのBchを左に倒すとモードフラグの変更
+        if(cugo_Bch_flag){
+          if (cugoRunMode == CUGO_RC_MODE){
+            cugoRunMode = CUGO_ARDUINO_MODE;
+          }else if (cugoRunMode == CUGO_ARDUINO_MODE){
+            cugoRunMode = CUGO_RC_MODE;  
+          }
+          cugo_Bch_flag = false;
+        }
+      }else
+      {
+      cugo_Bch_flag = true;
+      }       
     }
     OLD_PWM_IN_PIN1_VALUE = OLD_PWM_IN_PIN1_VALUE ? LOW : HIGH;
   }
@@ -95,100 +123,62 @@ ISR(PCINT2_vect)
     }
     OLD_PWM_IN_PIN2_VALUE = OLD_PWM_IN_PIN2_VALUE ? LOW : HIGH;
   }
+
+  if (OLD_CMD_BUTTON_VALUE != digitalRead(CMD_BUTTON_PIN))
+  {
+    if (LOW == OLD_CMD_BUTTON_VALUE)
+    { // 立ち上がり時の処理
+      PIN_UP(3);
+      button_check = true;//★ボタンはこれで判定でよいか？
+    }
+    else
+    { // 立下り時の処理
+      PIN_DOWN(3);
+      button_check = false;
+    }
+    OLD_CMD_BUTTON_VALUE = OLD_CMD_BUTTON_VALUE ? LOW : HIGH;
+  }  
 }
 
+/*
 //自動走行モード(arduino_mode)の実行
 void arduino_mode()
 {
-  digitalWrite(LED_BUILTIN, HIGH);  // ARDUINO_MODEでLED点灯
-  CMD_EXECUTE();
-  for (int i = 0; i < MOTOR_NUM; i++) { 
-    motor_controllers[i].driveMotor();
-  }
+
+  //CMD_EXECUTE();
+
 }
+*/
 
-//モード切り替わり確認
-void check_mode_change()
+//割り込み時の実行処理関連 
+void cugo_setup_middle()
 {
-  noInterrupts();      //割り込み停止
-  rcTime[0] = time[0];
-  rcTime[1] = time[1];
-  rcTime[2] = time[2];
-  interrupts();     //割り込み開始
-
-  if (ARDUINO_MODE_IN < rcTime[1])
-  {
-    if (runMode != ARDUINO_MODE)
-    { // モードが変わった時(RC→ARDUINO)
-      Serial.println(F("##########################"));                  
-      Serial.println(F("### モード:ARDUINO_MODE ###"));
-      Serial.println(F("##########################"));            
-      stop_motor_immediately(motor_controllers);
-      reset_arduino_mode_flags();
-      reset_pid_gain(motor_controllers);
-    }
-    runMode = ARDUINO_MODE;
-  }
-  else if (ARDUINO_MODE_OUT > rcTime[1])
-  {
-    if (runMode != RC_MODE)
-    { // モードが変わった時(ARDUINO→RC)
-      Serial.println(F("##########################"));                  
-      Serial.println(F("###   モード:RC_MODE    ###"));
-      Serial.println(F("##########################"));            
-      reset_arduino_mode_flags();
-    }
-    runMode = RC_MODE;
-  }
-  
-  if (ARDUINO_MODE == runMode)
-  {
-    arduino_mode();
-  }
-  else
-  {
-    rc_mode(rcTime,motor_controllers);
-  }
-}
-
-//割り込み時の実行処理関連
-void init_PID()
-{
-  //Serial.println(F("#   init_PID"));//確認用
-  pinMode(PIN_ENCODER_L_A, INPUT_PULLUP);     //A相用信号入力　入力割り込みpinを使用　内蔵プルアップ有効
-  pinMode(PIN_ENCODER_L_B, INPUT_PULLUP);     //B相用信号入力　内蔵プルアップ有効
-  pinMode(PIN_ENCODER_R_A, INPUT_PULLUP);     //A相用信号入力　入力割り込みpinを使用　内蔵プルアップ有効
-  pinMode(PIN_ENCODER_R_B, INPUT_PULLUP);     //B相用信号入力　内蔵プルアップ有効
+  cugo_init_middle();
 
   // LEFTインスタンス有効化
-  motor_controllers[MOTOR_LEFT] = MotorController(PIN_ENCODER_L_A, PIN_ENCODER_L_B, PIN_MOTOR_L, 2048, 600, 100, L_LPF, L_KP, L_KI, L_KD, L_reverse);
+  cugo_motor_controllers[MOTOR_LEFT] = MotorController(PIN_ENCODER_L_A, PIN_ENCODER_L_B, PIN_MOTOR_L, 2048, 600, 100, L_LPF, L_KP, L_KI, L_KD, L_reverse);
   // RIGHTインスタンス有効化
-  motor_controllers[MOTOR_RIGHT] = MotorController(PIN_ENCODER_R_A, PIN_ENCODER_R_B, PIN_MOTOR_R, 2048, 600, 100, R_LPF, R_KP, R_KI, R_KD, R_reverse);
+  cugo_motor_controllers[MOTOR_RIGHT] = MotorController(PIN_ENCODER_R_A, PIN_ENCODER_R_B, PIN_MOTOR_R, 2048, 600, 100, R_LPF, R_KP, R_KI, R_KD, R_reverse);
 
   // エンコーダカウンタは純正のハードウェア割り込みピンを使用
-  attachInterrupt(digitalPinToInterrupt(PIN_ENCODER_L_A), leftEncHandler, RISING);
-  attachInterrupt(digitalPinToInterrupt(PIN_ENCODER_R_A), rightEncHandler, RISING);
+  attachInterrupt(digitalPinToInterrupt(PIN_ENCODER_L_A), cugoLeftEncHandler, RISING);
+  attachInterrupt(digitalPinToInterrupt(PIN_ENCODER_R_A), cugoRightEncHandler, RISING);
 
   // 初期値でモータ指示。起動時に停止を入力しないと保護機能が働き、回りません。
-  motor_direct_instructions(1500, 1500,motor_controllers); //直接停止命令を出す
+  cugo_motor_direct_instructions(1500, 1500,cugo_motor_controllers); //直接停止命令を出す
   delay(100); // すぐに別の値でモータを回そうとするとガクガクするので落ち着くまで待つ。10ms程度でも問題なし。
 }
 
-//割り込み時の実行処理関連
-void leftEncHandler()
+//割り込み時の実行処理関連 //setupであることを隠す
+void cugoLeftEncHandler()
 {
-  motor_controllers[MOTOR_LEFT].updateEnc();
+  cugo_motor_controllers[MOTOR_LEFT].updateEnc();
 }
 
-//割り込み時の実行処理関連
-void rightEncHandler()
+//割り込み時の実行処理関連　//setupであることを隠す
+void cugoRightEncHandler()
 {
-  motor_controllers[MOTOR_RIGHT].updateEnc();
-}
-//10ミリ秒毎に実行
-void job_10ms()
-{
-  check_mode_change();
+  cugo_motor_controllers[MOTOR_RIGHT].updateEnc();
 }
 
 /***** Arduino学習用プログラミングはここから *****/
@@ -219,10 +209,11 @@ void job_10ms()
  *    turn_counter_clockwise(60,90); //上限速度90rpmで60度左に回転する      □詳細：()内の設定はturn_clockwise(60,90)と同様
 */
 
+/*
 //コマンドの実行
 void CMD_EXECUTE()
 {
-  cmd_manager(motor_controllers);  // おまじない
+  cmd_manager(cugo_motor_controllers);  // おまじない
 
   // ここから↓を改造していこう！
 
@@ -252,5 +243,6 @@ void CMD_EXECUTE()
   
   // ここから↑を改造していこう！
 
-  cmd_end(motor_controllers);      // おまじない
+  cmd_end(cugo_motor_controllers);      // おまじない
 }
+*/

@@ -16,16 +16,20 @@ const bool R_reverse = true;
 
 /***** ↑必要に応じて各ユーザーごとに設定可能↑ *****/
 
+bool cugo_Bch_flag = true;
+int oldRunMode = CUGO_RC_MODE;
 
-long int arduino_count_cmd_matrix[CMD_SIZE][2];
+
+long int arduino_count_cmd_matrix[CMD_SIZE][2];//★消す
 int arduino_flag_cmd_matrix[CMD_SIZE][4];
 int init_current_cmd = 0;
 
-long int target_count_L = 0;
-long int target_count_R = 0;
+long int cugo_target_count_L = 0;
+long int cugo_target_count_R = 0;
 long int target_wait_time = 0;
 int button_push_count = 0;
 bool button_enable = false;
+bool button_check = false;
 bool cmd_init = false;
 int current_cmd = 0;
 bool cmd_L_back = false;
@@ -40,43 +44,203 @@ unsigned long long current_time = 0; // オーバーフローしても問題な�
 unsigned long long prev_time_10ms = 0; // オーバーフローしても問題ないが64bit確保
 unsigned long long prev_time_100ms = 0; // オーバーフローしても問題ないが64bit確保
 unsigned long long prev_time_1000ms = 0; // オーバーフローしても問題ないが64bit確保
-int runMode = ARDUINO_MODE;
-// PID位置制御のデータ格納
-float l_count_prev_i_ = 0;
-float l_count_prev_p_ = 0;
-float r_count_prev_i_ = 0;
-float r_count_prev_p_ = 0;
-float l_count_gain = 0;
-float r_count_gain = 0;
+int cugoRunMode = CUGO_ARDUINO_MODE;
 
 int OLD_PWM_IN_PIN0_VALUE;   // プロポスティック入力値(L)
 int OLD_PWM_IN_PIN1_VALUE;   // プロポスティック入力値(MODE)
 int OLD_PWM_IN_PIN2_VALUE;   // プロポスティック入力値(R)
+int OLD_CMD_BUTTON_VALUE = 0; 
 volatile unsigned long upTime[PWM_IN_MAX];
-volatile unsigned long rcTime[PWM_IN_MAX];
+volatile unsigned long cugoRcTime[PWM_IN_MAX];
 volatile unsigned long time[PWM_IN_MAX];
+volatile unsigned long long cugoButtonTime;
 
-//CugoArduinoMiddle用関数
-void  set_up_cugo_arduino_middle(){
+/*-----------------------------------------------*/
+/*MiddleUser向け関数*/
+void cugo_init_middle(){
+  init_display();
+  init_KOPROPO(OLD_PWM_IN_PIN0_VALUE,OLD_PWM_IN_PIN1_VALUE,OLD_PWM_IN_PIN2_VALUE);
+  init_ARDUINO_CMD();//★消す
 
-  
+  pinMode(PIN_ENCODER_L_A, INPUT_PULLUP);     //A相用信号入力　入力割り込みpinを使用　内蔵プルアップ有効
+  pinMode(PIN_ENCODER_L_B, INPUT_PULLUP);     //B相用信号入力　内蔵プルアップ有効
+  pinMode(PIN_ENCODER_R_A, INPUT_PULLUP);     //A相用信号入力　入力割り込みpinを使用　内蔵プルアップ有効
+  pinMode(PIN_ENCODER_R_B, INPUT_PULLUP);     //B相用信号入力　内蔵プルアップ有効
+    
 }
 
-void cugo_motor_rpm_L(){} //速度指定正負で正転後転 rpmとm/sでそれぞれほしい。
-void cugo_get_rpm_L(){} //モーターの速度を計測 rpmとm/sでそれぞれほしい。
-void cugo_go_straight(){} //前進制御 mで指定
-void cugo_turn(){} //回転 右回り正回転する度数を指定（正負対応）degreeとradianそれぞれ欲しい
-void cugo_get_button_value(){} //今この瞬間がおされているのか？
-void cugo_count_button_times(){} //ボタンの押された回数 A2 PCINTで見る必要あり 
-void cugo_check_rc_mode(){} //loop内に入れるこの中でラジコン操作　おまじない。フラグ分ける　ifで分岐
-void cugo_chanege_rc_mode(){} //自動走行モードからラジコンモードにプログラムで切り替える 
-void cugo_check_distance_L(){} //左クローラーの移動距離を算出　LとR　合成(distanceとdegree からベクトル方向と距離) 
-void cugo_reset_distance_L(){} //左クローラーの移動距離を初期化
-void cugo_stop(){} //強制的にcugoのクローラー動作を停止
-void cugo_reset_count(){} //カウント数のデータ取得と初期化　
-void check_a_channel_value(){}  //ラジコン操作の数値（abc）
-void cugo_wait_ms(){} //delayの代替になるもの　
+//モード切り替わり確認
+void cugo_check_mode_change()
+{
+  noInterrupts();      //割り込み停止
+  cugoRcTime[0] = time[0];
+  cugoRcTime[1] = time[1];
+  cugoRcTime[2] = time[2];
+  cugoButtonTime = time[3];
+  interrupts();     //割り込み開始
 
+/*
+  if (CUGO_ARDUINO_MODE_IN < cugoRcTime[1])
+  {
+    if (cugoRunMode != CUGO_ARDUINO_MODE)
+    { 
+      
+      // モードが変わった時(RC→ARDUINO)
+      Serial.println(F("##########################"));                  
+      Serial.println(F("### モード:CUGO_ARDUINO_MODE ###"));
+      Serial.println(F("##########################"));            
+      stop_motor_immediately(cugo_motor_controllers);
+     
+      reset_arduino_mode_flags();
+      reset_pid_gain(cugo_motor_controllers);
+    }
+    cugoRunMode = CUGO_ARDUINO_MODE;
+  }
+  
+  if (CUGO_ARDUINO_MODE_OUT > cugoRcTime[1])
+  {
+    if (cugoRunMode != CUGO_RC_MODE)
+    { // モードが変わった時(ARDUINO→RC)
+      Serial.println(F("##########################"));                  
+      Serial.println(F("###   モード:CUGO_RC_MODE    ###"));
+      Serial.println(F("##########################"));            
+      reset_arduino_mode_flags();
+    }
+    cugoRunMode = CUGO_RC_MODE;
+  }
+  */
+  if (cugoRunMode == CUGO_ARDUINO_MODE && oldRunMode == CUGO_RC_MODE)
+  {
+    Serial.println(F("### モード:CUGO_ARDUINO_MODE ###"));
+    digitalWrite(LED_BUILTIN, HIGH);  // CUGO_ARDUINO_MODEでLED点灯           
+    oldRunMode == CUGO_ARDUINO_MODE;
+  }
+  if(cugoRunMode == CUGO_RC_MODE && oldRunMode == CUGO_ARDUINO_MODE)
+  {
+    Serial.println(F("###   モード:CUGO_RC_MODE    ###"));
+    digitalWrite(LED_BUILTIN, LOW); // CUGO_RC_MODEでLED消灯
+    oldRunMode == CUGO_RC_MODE;            
+  }                       
+}
+
+void cugo_wait_ms(int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM])
+{
+  long long int cugo_target_wait_time = micros()+ wait_ms*1000;
+  long long int cugo_current_time = micros();
+  while(cugo_target_wait_time > current_time){
+    for (int i = 0; i < MOTOR_NUM; i++) { 
+      cugo_motor_controllers[i].driveMotor();
+    }    
+    current_time = micros();
+  }
+}
+void cugo_go(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM])//単位はm,rpm
+{ 
+  calc_necessary_count(target_distance);
+  //★0入力でも動く可能性ありなので試験して距離０　速度０でそれぞれ動かないこと要確認
+  
+  for (int i = 0; i < MOTOR_NUM; i++) { 
+      cugo_motor_controllers[i].setTargetRpm(target_rpm);
+  }    
+    
+  while(cugo_check_count_achivement(cugo_motor_controllers)){        
+    for (int i = 0; i < MOTOR_NUM; i++){ 
+      cugo_motor_controllers[i].driveMotor();//★PIDいれる？
+    }    
+  }
+  stop_motor_immediately(cugo_motor_controllers);         
+}
+
+void cugo_go(float target_distance,MotorController cugo_motor_controllers[MOTOR_NUM])//単位はm,上限速度
+{ 
+  // PID位置制御の制御値
+  float l_count_p =0 ;  // P制御値
+  float l_count_i =0 ;  // I制御値    
+  float l_count_d =0 ;  // D制御値
+  float r_count_p =0 ;  // P制御値
+  float r_count_i =0 ;  // I制御値
+  float r_count_d =0 ;  // D制御値
+  // PID位置制御のデータ格納
+  float l_count_prev_i_ =0 ;
+  float l_count_prev_p_ =0 ;
+  float r_count_prev_i_ =0 ;
+  float r_count_prev_p_ =0 ;
+  float l_count_gain =0 ;
+  float r_count_gain =0 ;
+  
+  calc_necessary_count(target_distance);
+      
+  while(cugo_check_count_achivement(cugo_motor_controllers)){        
+      if(target_distance)
+      {
+        //停止しているだけの時
+        cugo_motor_controllers[MOTOR_LEFT].setTargetRpm(0);
+        cugo_motor_controllers[MOTOR_RIGHT].setTargetRpm(0);
+
+      } else{
+        // 各制御値の計算
+        l_count_p = cugo_target_count_L - cugo_motor_controllers[MOTOR_LEFT].getCount();
+        l_count_i = l_count_prev_i_ + l_count_p;
+        l_count_d = l_count_p - l_count_prev_p_;
+        r_count_p = cugo_target_count_R - cugo_motor_controllers[MOTOR_RIGHT].getCount();
+        r_count_i = r_count_prev_i_ + r_count_p;
+        r_count_d = r_count_p - r_count_prev_p_;
+
+        l_count_i = min( max(l_count_i,-L_MAX_COUNT_I),L_MAX_COUNT_I);        
+        r_count_i = min( max(r_count_i,-R_MAX_COUNT_I),R_MAX_COUNT_I);
+        // PID制御
+        l_count_gain = l_count_p * L_COUNT_KP + l_count_i * L_COUNT_KI + l_count_d * L_COUNT_KD;  
+        r_count_gain = r_count_p * R_COUNT_KP + r_count_i * R_COUNT_KI + r_count_d * R_COUNT_KD;  
+        // prev_ 更新
+        l_count_prev_p_ = l_count_p;
+        l_count_prev_i_ = l_count_i;
+        r_count_prev_p_ = r_count_p;
+        r_count_prev_i_ = r_count_i;
+
+        l_count_gain = min( max(l_count_gain,-MAX_MOTOR_RPM),MAX_MOTOR_RPM);//モーターの速度上限        
+        r_count_gain = min( max(r_count_gain,-MAX_MOTOR_RPM),MAX_MOTOR_RPM);//モーターの速度上限        
+        //★これを導入する？どこまで可変にする？      
+        //l_count_gain = min( max(l_count_gain,-fabsf(arduino_flag_cmd_matrix[current_cmd][2])),fabsf(arduino_flag_cmd_matrix[current_cmd][2]));//ユーザ設定の速度上限        
+        //r_count_gain = min( max(r_count_gain,-fabsf(arduino_flag_cmd_matrix[current_cmd][3])),fabsf(arduino_flag_cmd_matrix[current_cmd][3]));//ユーザ設定の速度上限  
+           
+        //位置制御
+        cugo_motor_controllers[MOTOR_LEFT].setTargetRpm(l_count_gain);
+        cugo_motor_controllers[MOTOR_RIGHT].setTargetRpm(r_count_gain);
+      }
+     
+    
+    for (int i = 0; i < MOTOR_NUM; i++){ 
+      cugo_motor_controllers[i].driveMotor();
+    }    
+  }
+  stop_motor_immediately(cugo_motor_controllers);         
+}
+
+
+int cugo_check_count_achivement(MotorController cugo_motor_controllers[MOTOR_NUM])
+{
+    bool L_done = false;
+    bool R_done = false;
+    // L側目標達成チェック
+    if (abs(cugo_target_count_L) <= abs(cugo_motor_controllers[MOTOR_LEFT].getCount())){
+        L_done = true;
+        cugo_motor_controllers[MOTOR_LEFT].setTargetRpm(0);
+    }
+    // R側目標達成チェック
+    if (abs(cugo_target_count_R) <= abs(cugo_motor_controllers[MOTOR_RIGHT].getCount())){
+        R_done = true;
+        cugo_motor_controllers[MOTOR_RIGHT].setTargetRpm(0);
+    }    
+    
+    if(L_done && R_done){
+    return 0;        
+    }else{
+    return 1;        
+    } 
+
+}
+
+/*-----------------------------------------------*/
 
 void init_SPI()
 {
@@ -93,11 +257,11 @@ void send_spi(int mode) {
   digitalWrite(SS, HIGH);
 }
 
-void init_KOPROPO(int runMode,int OLD_PWM_IN_PIN0_VALUE,int OLD_PWM_IN_PIN1_VALUE,int OLD_PWM_IN_PIN2_VALUE)
+void init_KOPROPO(int OLD_PWM_IN_PIN0_VALUE,int OLD_PWM_IN_PIN1_VALUE,int OLD_PWM_IN_PIN2_VALUE)
 {
   //Serial.println(F("#   init_KOPROPO"));//確認用
   // ピン変化割り込みの初期状態保存
-  runMode = RC_MODE;
+  cugoRunMode = CUGO_RC_MODE;
   OLD_PWM_IN_PIN0_VALUE = digitalRead(PWM_IN_PIN0);
   OLD_PWM_IN_PIN1_VALUE = digitalRead(PWM_IN_PIN1);
   OLD_PWM_IN_PIN2_VALUE = digitalRead(PWM_IN_PIN2);
@@ -106,8 +270,9 @@ void init_KOPROPO(int runMode,int OLD_PWM_IN_PIN0_VALUE,int OLD_PWM_IN_PIN1_VALU
   pinMode(PWM_IN_PIN0, INPUT);
   pinMode(PWM_IN_PIN1, INPUT);
   pinMode(PWM_IN_PIN2, INPUT);
-  PCMSK2 |= B11100000;  // D5,6,7を有効
-  PCICR  |= B00000100;  // PCIE2を有効
+  PCMSK1 |= B00000100;  // A2を有効 :PCINT10
+  PCMSK2 |= B11100000;  // D5,6,7を有効 :PCINT21,22,23
+  PCICR  |= B00000110;  // PCIE1,2を有効
 
   pinMode(LED_BUILTIN, OUTPUT); // Arduino/RC MODEの表示
   delay(100);
@@ -128,7 +293,7 @@ void set_arduino_cmd_matrix(long int cmd_0,long int cmd_1,int cmd_2,int cmd_3,in
 void init_ARDUINO_CMD()
 {
   //Serial.println(F("#   init_ARDUINO_CMD"));//確認用
-  pinMode(CMD_BUTTON_PIN, INPUT);
+  //pinMode(CMD_BUTTON_PIN, INPUT);
   for (int i = 0; i < CMD_SIZE; i++)
   {
     init_current_cmd = i;
@@ -153,14 +318,14 @@ void view_arduino_cmd_matrix()
 
 }
 
-void display_failsafe(bool FAIL_SAFE_DISPLAY,int runMode)
+void display_failsafe(bool FAIL_SAFE_DISPLAY,int cugoRunMode)
 {
   //Serial.println(F("#   display_failsafe"));//確認用
   if (FAIL_SAFE_DISPLAY == true)
   {
     Serial.println(F("DISPLAY FAIL SAFE PARAM"));        
     Serial.print(F("Mode(ARDUINO/RC): "));
-    Serial.println(runMode);
+    Serial.println(cugoRunMode);
     Serial.print(F("UDP recieve fail count: "));
     Serial.println(F(""));
   }
@@ -228,7 +393,7 @@ void wait_time(int milisec)
     }
     // 初回起動時の処理
     set_arduino_cmd_matrix(EXCEPTION_NO,EXCEPTION_NO, milisec, EXCEPTION_NO, 0, 0); 
-    if (ARDUINO_MODE == runMode){
+    if (CUGO_ARDUINO_MODE == cugoRunMode){
       Serial.print(F("###"));
       if(init_current_cmd < 9)
         Serial.print(F("0"));
@@ -247,12 +412,12 @@ void wait_time(int milisec)
 
   }
 }
-void check_achievement_wait_time_cmd(MotorController motor_controllers[2])
+void check_achievement_wait_time_cmd(MotorController cugo_motor_controllers[MOTOR_NUM])
 {
   //Serial.println(F("#   check_achievement_wait_time_cmd"));//確認用
   if (target_wait_time < micros())
   {
-    stop_motor_immediately(motor_controllers);
+    stop_motor_immediately(cugo_motor_controllers);
     wait_done = true;
     Serial.print(F("###"));
     if(current_cmd < 9)
@@ -278,10 +443,10 @@ void matu(int milisec)
 void calc_necessary_rotate(float degree) 
 {
   //Serial.println(F("#   calc_necessary_rotate"));//確認用
-  target_count_L =  ((degree / 360) * tread * PI) * encoder_resolution / (2 * wheel_radius_l * PI);
-  target_count_R = -((degree / 360) * tread * PI) * encoder_resolution / (2 * wheel_radius_r * PI);
+  cugo_target_count_L =  ((degree / 360) * tread * PI) * encoder_resolution / (2 * wheel_radius_l * PI);
+  cugo_target_count_R = -((degree / 360) * tread * PI) * encoder_resolution / (2 * wheel_radius_r * PI);
   //Serial.println("degree: " + String(degree));
-  //Serial.println("### target_count_L/R: " + String(*target_count_L) + " / " + String(*target_count_R) + "###");
+  //Serial.println("### cugo_target_count_L/R: " + String(*cugo_target_count_L) + " / " + String(*cugo_target_count_R) + "###");
   //Serial.println("kakudo: " + String((degree / 360) * tread * PI));
   //Serial.println("PI: " + String(PI));
   //Serial.println("issyuu: " + String(2 * wheel_radius_r * PI));
@@ -291,21 +456,21 @@ void calc_necessary_rotate(float degree)
 void calc_necessary_count(float distance) 
 {
   //Serial.println(F("#   calc_necessary_count"));//確認用
-  //  target_count_L = distance * encoder_resolution / (2 * wheel_radius_l * PI);
-  //  target_count_R = distance * encoder_resolution / (2 * wheel_radius_r * PI);
+  //  cugo_target_count_L = distance * encoder_resolution / (2 * wheel_radius_l * PI);
+  //  cugo_target_count_R = distance * encoder_resolution / (2 * wheel_radius_r * PI);
 
-  //target_count_L = distance / (2 * wheel_radius_l * PI);
-  //target_count_R = distance / (2 * wheel_radius_r * PI);
-  //target_count_L = target_count_L * encoder_resolution;
-  //target_count_R = target_count_R * encoder_resolution;
-  target_count_L = distance * conversion_distance_to_count;
-  target_count_R = distance * conversion_distance_to_count;
+  //cugo_target_count_L = distance / (2 * wheel_radius_l * PI);
+  //cugo_target_count_R = distance / (2 * wheel_radius_r * PI);
+  //cugo_target_count_L = cugo_target_count_L * encoder_resolution;
+  //cugo_target_count_R = cugo_target_count_R * encoder_resolution;
+  cugo_target_count_L = distance * conversion_distance_to_count;
+  cugo_target_count_R = distance * conversion_distance_to_count;
   //Serial.println("distance: " + String(distance));
   //Serial.println("distance: " + String(encoder_resolution));
   //Serial.println("2 * wheel_radius_l * PI: " + String(2 * wheel_radius_l * PI));
   //Serial.println("calc: " + String(distance * encoder_resolution / (2 * wheel_radius_l * PI)));
 
-  //Serial.println("### target_count_L/R: " + String(*target_count_L) + " / " + String(*target_count_R) + "###");
+  //Serial.println("### cugo_target_count_L/R: " + String(*cugo_target_count_L) + " / " + String(*cugo_target_count_R) + "###");
   //Serial.println("distance: " + String(distance));
   //Serial.println("wheel_radius_l: " + String(wheel_radius_l));
   //Serial.println("PI: " + String(PI));
@@ -339,7 +504,7 @@ void wait_button()
     }
     // 初回起動時の処理
     set_arduino_cmd_matrix(EXCEPTION_NO, EXCEPTION_NO, EXCEPTION_NO, 255, 0, 0); 
-    if (ARDUINO_MODE == runMode){
+    if (CUGO_ARDUINO_MODE == cugoRunMode){
       Serial.print(F("###"));
       if(init_current_cmd < 9)
         Serial.print(F("0"));
@@ -366,7 +531,7 @@ void button()
   wait_button();
 }
 
-void display_speed(MotorController motor_controllers[2],bool ENCODER_DISPLAY) // motor_controllers[0] MOTOR_LEFT motor_controllers[1] MOTOR_RIGHT
+void display_speed(MotorController cugo_motor_controllers[MOTOR_NUM],bool ENCODER_DISPLAY) // cugo_motor_controllers[0] MOTOR_LEFT cugo_motor_controllers[1] MOTOR_RIGHT
 {
 
   if (ENCODER_DISPLAY == true)
@@ -374,41 +539,41 @@ void display_speed(MotorController motor_controllers[2],bool ENCODER_DISPLAY) //
     //Serial.println(F("#   display_speed"));//確認用
     //Serial.println("DISPLAY MOTOR COUNTER & SPEED");
     //Serial.print("Mode:");
-    //Serial.println(runMode);
+    //Serial.println(cugoRunMode);
 
     Serial.print(F("Encoder count (L/R):"));
-    //Serial.print(motor_controllers[MOTOR_LEFT].getRpm());   // 制御量を見るため。開発用
-    //Serial.print(motor_controllers[MOTOR_LEFT].getSpeed()); // 制御量を見るため。開発用
-    Serial.print(String(motor_controllers[MOTOR_LEFT].getCount()));
+    //Serial.print(cugo_motor_controllers[MOTOR_LEFT].getRpm());   // 制御量を見るため。開発用
+    //Serial.print(cugo_motor_controllers[MOTOR_LEFT].getSpeed()); // 制御量を見るため。開発用
+    Serial.print(String(cugo_motor_controllers[MOTOR_LEFT].getCount()));
     Serial.print(F(","));
-    //Serial.println(motor_controllers[MOTOR_RIGHT].getRpm());    //制御量を見るため。
-    //Serial.println(motor_controllers[MOTOR_RIGHT].getSpeed());  //制御量を見るため。
-    Serial.println(String(motor_controllers[MOTOR_RIGHT].getCount()));
+    //Serial.println(cugo_motor_controllers[MOTOR_RIGHT].getRpm());    //制御量を見るため。
+    //Serial.println(cugo_motor_controllers[MOTOR_RIGHT].getSpeed());  //制御量を見るため。
+    Serial.println(String(cugo_motor_controllers[MOTOR_RIGHT].getCount()));
 
 
     //Serial.print("PID CONTROL RPM(L/R):");
-    //Serial.print(motor_controllers[MOTOR_LEFT].getRpm()); // 制御量を見るため。
-    //Serial.print(motor_controllers[MOTOR_LEFT].getSpeed()); // 制御量を見るため。
+    //Serial.print(cugo_motor_controllers[MOTOR_LEFT].getRpm()); // 制御量を見るため。
+    //Serial.print(cugo_motor_controllers[MOTOR_LEFT].getSpeed()); // 制御量を見るため。
     //Serial.print(",");
-    //Serial.println(motor_controllers[MOTOR_RIGHT].getRpm());    //制御量を見るため。
-    //Serial.println(motor_controllers[MOTOR_RIGHT].getSpeed());    //制御量を見るため。
+    //Serial.println(cugo_motor_controllers[MOTOR_RIGHT].getRpm());    //制御量を見るため。
+    //Serial.println(cugo_motor_controllers[MOTOR_RIGHT].getSpeed());    //制御量を見るため。
 
     //Serial.println(""); // 改行
   }
 }
-void display_target_rpm(MotorController motor_controllers[2],bool ENCODER_DISPLAY) // motor_controllers[0] MOTOR_LEFT motor_controllers[1] MOTOR_RIGHT
+void display_target_rpm(MotorController cugo_motor_controllers[MOTOR_NUM],bool ENCODER_DISPLAY) // cugo_motor_controllers[0] MOTOR_LEFT cugo_motor_controllers[1] MOTOR_RIGHT
 {   
 
   if (ENCODER_DISPLAY == true)
   {
   //Serial.println(F("#   display_target_rpm"));//確認用
   Serial.print(F("target_rpm[L]:"));
-  Serial.println(String(motor_controllers[MOTOR_LEFT].getTargetRpm()));
+  Serial.println(String(cugo_motor_controllers[MOTOR_LEFT].getTargetRpm()));
   Serial.print(F("target_rpm[R]:"));
-  Serial.println(String(motor_controllers[MOTOR_RIGHT].getTargetRpm()));
+  Serial.println(String(cugo_motor_controllers[MOTOR_RIGHT].getTargetRpm()));
   }
 }
-void display_PID(MotorController motor_controllers[2],bool PID_CONTROLL_DISPLAY) // motor_controllers[0] MOTOR_LEFT motor_controllers[1] MOTOR_RIGHT
+void display_PID(MotorController cugo_motor_controllers[MOTOR_NUM],bool PID_CONTROLL_DISPLAY) // cugo_motor_controllers[0] MOTOR_LEFT cugo_motor_controllers[1] MOTOR_RIGHT
 {
 
 
@@ -416,47 +581,47 @@ void display_PID(MotorController motor_controllers[2],bool PID_CONTROLL_DISPLAY)
   {
     //Serial.println("#   display_PID");// 確認用
     Serial.print(F("Encoder count (L/R): "));
-    Serial.print(String(motor_controllers[MOTOR_LEFT].getCount()));
+    Serial.print(String(cugo_motor_controllers[MOTOR_LEFT].getCount()));
     Serial.print(F(","));
-    Serial.println(String(motor_controllers[MOTOR_RIGHT].getCount()));
+    Serial.println(String(cugo_motor_controllers[MOTOR_RIGHT].getCount()));
 
     Serial.print(F("Target RPM (L/R): "));
-    Serial.print(String(motor_controllers[MOTOR_LEFT].getTargetRpm()));
+    Serial.print(String(cugo_motor_controllers[MOTOR_LEFT].getTargetRpm()));
     Serial.print(F(","));
-    Serial.println(String(motor_controllers[MOTOR_RIGHT].getTargetRpm()));
+    Serial.println(String(cugo_motor_controllers[MOTOR_RIGHT].getTargetRpm()));
 
     Serial.print(F("PID CONTROL RPM(L/R):")); 
-    Serial.print(String(motor_controllers[MOTOR_LEFT].getRpm()));
+    Serial.print(String(cugo_motor_controllers[MOTOR_LEFT].getRpm()));
     Serial.print(F(","));
-    Serial.println(motor_controllers[MOTOR_RIGHT].getRpm());    //制御量を見るため。デバッグ用
+    Serial.println(cugo_motor_controllers[MOTOR_RIGHT].getRpm());    //制御量を見るため。デバッグ用
 
     Serial.println(F("PID controll gain = P x kp + I x ki + D x kd"));
     Serial.print(F("[L]: ")); 
-    Serial.print(String(motor_controllers[MOTOR_LEFT].getSpeed())); 
+    Serial.print(String(cugo_motor_controllers[MOTOR_LEFT].getSpeed())); 
     Serial.print(F(" = "));
-    Serial.print(String(motor_controllers[MOTOR_LEFT].getPID_P())); 
+    Serial.print(String(cugo_motor_controllers[MOTOR_LEFT].getPID_P())); 
     Serial.print(F(" x "));
     Serial.print(String(L_KP));
     Serial.print(F(" + "));
-    Serial.print(String(motor_controllers[MOTOR_LEFT].getPID_I())); 
+    Serial.print(String(cugo_motor_controllers[MOTOR_LEFT].getPID_I())); 
     Serial.print(F(" x "));
     Serial.print(String(L_KI)); 
     Serial.print(F(" + "));
-    Serial.print(String(motor_controllers[MOTOR_LEFT].getPID_D())); 
+    Serial.print(String(cugo_motor_controllers[MOTOR_LEFT].getPID_D())); 
     Serial.print(F(" x ")); 
     Serial.println(String(L_KD)); 
     Serial.print(F("[R]: ")); 
-    Serial.print(String(motor_controllers[MOTOR_RIGHT].getSpeed())); 
+    Serial.print(String(cugo_motor_controllers[MOTOR_RIGHT].getSpeed())); 
     Serial.print(F(" = "));
-    Serial.print(String(motor_controllers[MOTOR_RIGHT].getPID_P()));
+    Serial.print(String(cugo_motor_controllers[MOTOR_RIGHT].getPID_P()));
     Serial.print(F(" x "));
     Serial.print(String(R_KP)); 
     Serial.print(F(" + "));
-    Serial.print(String(motor_controllers[MOTOR_RIGHT].getPID_I()));
+    Serial.print(String(cugo_motor_controllers[MOTOR_RIGHT].getPID_I()));
     Serial.print(F(" x ")); 
     Serial.print(String(R_KI));
     Serial.print(F(" + "));
-    Serial.print(String(motor_controllers[MOTOR_RIGHT].getPID_D()));
+    Serial.print(String(cugo_motor_controllers[MOTOR_RIGHT].getPID_D()));
     Serial.print(F(" x ")); 
     Serial.println(String(R_KD));
   }
@@ -481,35 +646,35 @@ int split(String data, char delimiter, String *dst)//dstは参照引き渡し
   return (index + 1);
 }
 
-void motor_direct_instructions(int left, int right,MotorController motor_controllers[2])// motor_controllers[0] MOTOR_LEFT motor_controllers[1] MOTOR_RIGHT
+void cugo_motor_direct_instructions(int left, int right,MotorController cugo_motor_controllers[MOTOR_NUM])// cugo_motor_controllers[0] MOTOR_LEFT cugo_motor_controllers[1] MOTOR_RIGHT
 {
-  //Serial.println(F("#   motor_direct_instructions"));//確認用
-  motor_controllers[0].servo_.writeMicroseconds(left);
-  motor_controllers[1].servo_.writeMicroseconds(right);
+  //Serial.println(F("#   cugo_motor_direct_instructions"));//確認用
+  cugo_motor_controllers[0].servo_.writeMicroseconds(left);
+  cugo_motor_controllers[1].servo_.writeMicroseconds(right);
 }
-void rc_mode(volatile unsigned long rcTime[PWM_IN_MAX],MotorController motor_controllers[2])
+void cugo_rcmode(volatile unsigned long cugoRcTime[PWM_IN_MAX],MotorController cugo_motor_controllers[MOTOR_NUM])
 {
-  //Serial.println(F("#   rc_mode"));//確認用  
-  digitalWrite(LED_BUILTIN, LOW); // RC_MODEでLED消灯
+  //Serial.println(F("#   cugo_CUGO_RC_MODE"));//確認用  
+  //digitalWrite(LED_BUILTIN, LOW); // CUGO_RC_MODEでLED消灯
   // 値をそのままへESCへ出力する
-  motor_direct_instructions(rcTime[0], rcTime[2],motor_controllers);
-  //Serial.println("input cmd:" + String(rcTime[0]) + ", " + String(rcTime[2]));
+  cugo_motor_direct_instructions(cugoRcTime[0], cugoRcTime[2],cugo_motor_controllers);
+  //Serial.println("input cmd:" + String(cugoRcTime[0]) + ", " + String(cugoRcTime[2]));
 }
 
-void stop_motor_immediately(MotorController motor_controllers[2])
+void stop_motor_immediately(MotorController cugo_motor_controllers[MOTOR_NUM])
 {
   //Serial.println(F("#   stop_motor_immediately"));//確認用
-  motor_controllers[0].setTargetRpm(0.0);
-  motor_controllers[1].setTargetRpm(0.0);
-  motor_direct_instructions(1500, 1500,motor_controllers);
+  cugo_motor_controllers[0].setTargetRpm(0.0);
+  cugo_motor_controllers[1].setTargetRpm(0.0);
+  cugo_motor_direct_instructions(1500, 1500,cugo_motor_controllers);
 }
 
-void reset_pid_gain(MotorController motor_controllers[2])
+void reset_pid_gain(MotorController cugo_motor_controllers[MOTOR_NUM])
 {
   //Serial.println(F("#   reset_pid_gain"));//確認用  
   for (int i = 0; i < MOTOR_NUM; i++)
   {
-    motor_controllers[i].reset_PID_param();
+    cugo_motor_controllers[i].reset_PID_param();
   }
 }
 
@@ -536,10 +701,10 @@ void go_backward(float distance,float max_velocity)
     // 初回起動時の処理
     //Serial.println("init_current_cmd: " + String(init_current_cmd));
     calc_necessary_count(distance);
-    //Serial.print(F("target_count_L/R: ")); 
-    //Serial.print(String(-target_count_L)); 
+    //Serial.print(F("cugo_target_count_L/R: ")); 
+    //Serial.print(String(-cugo_target_count_L)); 
     //Serial.print(F(", "));
-    //Serial.println(String(-target_count_R));
+    //Serial.println(String(-cugo_target_count_R));
     float velocity = 0.0;
     if(max_velocity == EXCEPTION_NO)
     {
@@ -547,8 +712,8 @@ void go_backward(float distance,float max_velocity)
       }else{
       velocity = max_velocity;
     }
-    set_arduino_cmd_matrix(-target_count_L, -target_count_R, EXCEPTION_NO, EXCEPTION_NO, -velocity, -velocity); 
-    if (ARDUINO_MODE == runMode){
+    set_arduino_cmd_matrix(-cugo_target_count_L, -cugo_target_count_R, EXCEPTION_NO, EXCEPTION_NO, -velocity, -velocity); 
+    if (CUGO_ARDUINO_MODE == cugoRunMode){
       Serial.print(F("###"));
       if(init_current_cmd < 9)
         Serial.print(F("0"));
@@ -593,7 +758,7 @@ void turn_clockwise(float degree,float max_velocity)
     // 初回起動時の処理
     //Serial.println("init_current_cmd: " + String(init_current_cmd));
     calc_necessary_rotate(degree);
-    //Serial.println("target_count_L/R: " + String(target_count_L) + ", " + String(target_count_R));
+    //Serial.println("cugo_target_count_L/R: " + String(cugo_target_count_L) + ", " + String(cugo_target_count_R));
     float velocity = 0.0;
      if(max_velocity == EXCEPTION_NO)
     {
@@ -601,8 +766,8 @@ void turn_clockwise(float degree,float max_velocity)
       }else{
       velocity = max_velocity;
     }   
-    set_arduino_cmd_matrix(target_count_L, target_count_R, EXCEPTION_NO, EXCEPTION_NO, velocity, -velocity); 
-    if (ARDUINO_MODE == runMode){
+    set_arduino_cmd_matrix(cugo_target_count_L, cugo_target_count_R, EXCEPTION_NO, EXCEPTION_NO, velocity, -velocity); 
+    if (CUGO_ARDUINO_MODE == cugoRunMode){
       Serial.print(F("###"));
       if(init_current_cmd < 9)
         Serial.print(F("0"));
@@ -664,7 +829,7 @@ void go_forward(float distance,float max_velocity)
     // 初回起動時の処理
     //Serial.println("init_current_cmd: " + String(init_current_cmd));
     calc_necessary_count(distance);
-    //Serial.println("target_count_L/R: " + String(target_count_L) + ", " + String(target_count_R));
+    //Serial.println("cugo_target_count_L/R: " + String(cugo_target_count_L) + ", " + String(cugo_target_count_R));
     float velocity = 0.0;
     if(max_velocity == EXCEPTION_NO)
     {
@@ -672,9 +837,9 @@ void go_forward(float distance,float max_velocity)
       }else{
       velocity = max_velocity;
     }
-    set_arduino_cmd_matrix(target_count_L, target_count_R, EXCEPTION_NO, EXCEPTION_NO, velocity, velocity); 
-    //Serial.println("matrix_target_count_L/R: " + String(arduino_count_cmd_matrix[init_current_cmd][0]) + ", " + String(arduino_count_cmd_matrix[init_current_cmd][0]));
-    if (ARDUINO_MODE == runMode){
+    set_arduino_cmd_matrix(cugo_target_count_L, cugo_target_count_R, EXCEPTION_NO, EXCEPTION_NO, velocity, velocity); 
+    //Serial.println("matrix_cugo_target_count_L/R: " + String(arduino_count_cmd_matrix[init_current_cmd][0]) + ", " + String(arduino_count_cmd_matrix[init_current_cmd][0]));
+    if (CUGO_ARDUINO_MODE == cugoRunMode){
       Serial.print(F("###"));
       if(init_current_cmd < 9)
         Serial.print(F("0"));
@@ -683,7 +848,7 @@ void go_forward(float distance,float max_velocity)
       Serial.print(F("番目のコマンド："));
       Serial.print(String(distance));
       Serial.print(F("m　前に進む "));
-      //Serial.print(String(target_count_L));
+      //Serial.print(String(cugo_target_count_L));
       Serial.print(F("(上限速度："));        
       Serial.print(String(velocity));
       Serial.println(F("rpm)"));
@@ -720,10 +885,10 @@ void turn_counter_clockwise(float degree,float max_velocity)
     // 初回起動時の処理
     //Serial.println("init_current_cmd: " + String(init_current_cmd));
     calc_necessary_rotate(degree);
-    //Serial.print(F("target_count_L/R: "));
-    //Serial.print(String(-target_count_L)); 
+    //Serial.print(F("cugo_target_count_L/R: "));
+    //Serial.print(String(-cugo_target_count_L)); 
     //Serial.print(F(", ")); 
-    //Serial.println(String(-target_count_R));
+    //Serial.println(String(-cugo_target_count_R));
 
     float velocity = 0.0;
     if(max_velocity == EXCEPTION_NO)
@@ -732,8 +897,8 @@ void turn_counter_clockwise(float degree,float max_velocity)
       }else{
       velocity = max_velocity;
     }   
-    set_arduino_cmd_matrix(-target_count_L, -target_count_R, EXCEPTION_NO, EXCEPTION_NO, -velocity, velocity); 
-    if (ARDUINO_MODE == runMode){
+    set_arduino_cmd_matrix(-cugo_target_count_L, -cugo_target_count_R, EXCEPTION_NO, EXCEPTION_NO, -velocity, velocity); 
+    if (CUGO_ARDUINO_MODE == cugoRunMode){
       Serial.print(F("###"));
       if(init_current_cmd < 9)
         Serial.print(F("0"));
@@ -792,8 +957,8 @@ void reset_arduino_mode_flags()
   //Serial.println(F("#   reset_arduino_mode_flags"));//確認用  
   cmd_init = false;
   current_cmd = 0;
-  target_count_L = 0;
-  target_count_R = 0;
+  cugo_target_count_L = 0;
+  cugo_target_count_R = 0;
   cmd_exec = false;
   count_done = false;
   wait_done  = false;
@@ -806,11 +971,11 @@ void reset_arduino_mode_flags()
   init_ARDUINO_CMD();
 }
 
-void set_go_forward_cmd(MotorController motor_controllers[2])
+void set_go_forward_cmd(MotorController cugo_motor_controllers[MOTOR_NUM])
 {
   //Serial.println(F("#   set_go_forward_cmd"));//確認用    
-  target_count_L = motor_controllers[0].getCount() + arduino_count_cmd_matrix[current_cmd][0];
-  //Serial.println("target_count_L: " + String(target_count_L) + " = " + String(motor_controllers[MOTOR_LEFT].getCount()) + " + " + String(arduino_count_cmd_matrix[current_cmd][0]));
+  cugo_target_count_L = cugo_motor_controllers[0].getCount() + arduino_count_cmd_matrix[current_cmd][0];
+  //Serial.println("cugo_target_count_L: " + String(cugo_target_count_L) + " = " + String(cugo_motor_controllers[MOTOR_LEFT].getCount()) + " + " + String(arduino_count_cmd_matrix[current_cmd][0]));
   //while(1);
   if (arduino_count_cmd_matrix[current_cmd][0] >= 0) {
     cmd_L_back = false;
@@ -818,7 +983,7 @@ void set_go_forward_cmd(MotorController motor_controllers[2])
     cmd_L_back = true;
   }
 
-  target_count_R = motor_controllers[1].getCount() + arduino_count_cmd_matrix[current_cmd][1];
+  cugo_target_count_R = cugo_motor_controllers[1].getCount() + arduino_count_cmd_matrix[current_cmd][1];
   if (arduino_count_cmd_matrix[current_cmd][1] >= 0) {
     cmd_R_back = false;
   } else {
@@ -835,10 +1000,10 @@ void view_flags()
   Serial.println(String(cmd_init));
   Serial.print(F("current_cmd: "));
   Serial.println(String(current_cmd));
-  Serial.print(F("target_count_L: "));
-  Serial.println(String(target_count_L));
-  Serial.print(F("target_count_R: "));
-  Serial.println(String(target_count_R));
+  Serial.print(F("cugo_target_count_L: "));
+  Serial.println(String(cugo_target_count_L));
+  Serial.print(F("cugo_target_count_R: "));
+  Serial.println(String(cugo_target_count_R));
   Serial.print(F("cmd_exec: "));
   Serial.println(String(cmd_exec));
   Serial.print(F("count_done: "));
@@ -871,7 +1036,7 @@ void check_achievement_spi_cmd()
   Serial.println(F("番目のコマンド：終了  ###"));    
 }
 
-void cmd_end(MotorController motor_controllers[2]) 
+void cmd_end(MotorController cugo_motor_controllers[MOTOR_NUM]) 
 {
 
   if (cmd_init == false)
@@ -887,8 +1052,8 @@ void cmd_end(MotorController motor_controllers[2])
     }
 
     // 初回起動時の処理をここで無効化
-    reset_pid_gain(motor_controllers);
-    if (ARDUINO_MODE == runMode){
+    reset_pid_gain(cugo_motor_controllers);
+    if (CUGO_ARDUINO_MODE == cugoRunMode){
       Serial.println(F("###   コマンド準備完了    ###"));
       Serial.println(F("##########################"));
       Serial.println(F("###   コマンド実行開始    ###"));
@@ -904,12 +1069,12 @@ void cmd_end(MotorController motor_controllers[2])
 
 
 
-void cmd_manager_flags_init(MotorController motor_controllers[2])
+void cmd_manager_flags_init(MotorController cugo_motor_controllers[MOTOR_NUM])
 {
   //Serial.println(F("#   cmd_manager_flags_init"));
   // これからコマンドを実行するときの処理
 
-  reset_pid_gain(motor_controllers);
+  reset_pid_gain(cugo_motor_controllers);
   cmd_exec = true;
   count_done = false;
   wait_done = false;
@@ -1003,52 +1168,52 @@ void cmd_manager_flags_init(MotorController motor_controllers[2])
     view_flags();
     view_arduino_cmd_matrix();
     Serial.println(F("複数コマンド入力。入力関数に不備があるか、コマンドを上書きしている可能性あり。"));
-    stop_motor_immediately(motor_controllers);
+    stop_motor_immediately(cugo_motor_controllers);
 
     while (1);
   }
 }
 
-void check_achievement_go_forward_cmd(MotorController motor_controllers[2])// motor_controllers[0] MOTOR_LEFT motor_controllers[1] MOTOR_RIGHT
+void check_achievement_go_forward_cmd(MotorController cugo_motor_controllers[MOTOR_NUM])// cugo_motor_controllers[0] MOTOR_LEFT cugo_motor_controllers[1] MOTOR_RIGHT
 {
   bool L_done = false;
   bool R_done = false;
 
   // L側目標達成チェック
   if (cmd_L_back == false) {
-    if (target_count_L < motor_controllers[0].getCount())
+    if (cugo_target_count_L < cugo_motor_controllers[0].getCount())
       L_done = true;
       //Serial.println(F("#   L_done"));
   } else {
-    if (target_count_L > motor_controllers[0].getCount())
+    if (cugo_target_count_L > cugo_motor_controllers[0].getCount())
       L_done = true;
       //Serial.println(F("#   L_done"));      
   }
 
   // R側目標達成チェック
   if (cmd_R_back == false) {
-    if (target_count_R < motor_controllers[1].getCount())
+    if (cugo_target_count_R < cugo_motor_controllers[1].getCount())
       R_done = true;
       //Serial.println(F("#   R_done"));
   } else {
-    if (target_count_R > motor_controllers[1].getCount())
+    if (cugo_target_count_R > cugo_motor_controllers[1].getCount())
       R_done = true;
       //Serial.println(F("#   R_done"));      
   }
 
   if (L_done == true)
   {
-    motor_controllers[0].setTargetRpm(0);
+    cugo_motor_controllers[0].setTargetRpm(0);
   }
   if (R_done == true)
   {
-    motor_controllers[1].setTargetRpm(0);
+    cugo_motor_controllers[1].setTargetRpm(0);
   }
 
   // L/R達成していたら終了
   if (L_done == true && R_done == true)
   {
-    stop_motor_immediately(motor_controllers);
+    stop_motor_immediately(cugo_motor_controllers);
     count_done = true;
     Serial.print(F("###"));
     if(current_cmd < 9)
@@ -1060,23 +1225,23 @@ void check_achievement_go_forward_cmd(MotorController motor_controllers[2])// mo
     double distance = 0 ;
     if(arduino_flag_cmd_matrix[current_cmd][2] > 0 && arduino_flag_cmd_matrix[current_cmd][3] > 0)//前進
     {
-    //distance =  (motor_controllers[0].getCount()) * (( 2 * wheel_radius_l * PI) / encoder_resolution);
-    distance = motor_controllers[0].getCount() * conversion_count_to_distance;
+    //distance =  (cugo_motor_controllers[0].getCount()) * (( 2 * wheel_radius_l * PI) / encoder_resolution);
+    distance = cugo_motor_controllers[0].getCount() * conversion_count_to_distance;
     Serial.print(String(fabsf(distance)));            
     Serial.print(F(" m　進んだ"));              
     }else if(arduino_flag_cmd_matrix[current_cmd][2] < 0 && arduino_flag_cmd_matrix[current_cmd][3] > 0)//左回り
     {
-    degree = (2 * wheel_radius_l * PI * motor_controllers[0].getCount() * 360) / (encoder_resolution * tread * PI);
+    degree = (2 * wheel_radius_l * PI * cugo_motor_controllers[0].getCount() * 360) / (encoder_resolution * tread * PI);
     Serial.print(String(abs(degree)));            
     Serial.print(F(" 度　左回りに回転した"));              
     }else if(arduino_flag_cmd_matrix[current_cmd][2] > 0 && arduino_flag_cmd_matrix[current_cmd][3] < 0)//右回り
     {
-    degree = (2 * wheel_radius_l * PI * motor_controllers[0].getCount() * 360) / (encoder_resolution * tread * PI);
+    degree = (2 * wheel_radius_l * PI * cugo_motor_controllers[0].getCount() * 360) / (encoder_resolution * tread * PI);
     Serial.print(String(abs(degree)));            
     Serial.print(F(" 度　右回りに回転した"));
     }else if(arduino_flag_cmd_matrix[current_cmd][2] < 0 && arduino_flag_cmd_matrix[current_cmd][3] < 0)//後進
     {
-    distance =  (motor_controllers[0].getCount()) * (( 2 * wheel_radius_l * PI) / encoder_resolution);
+    distance =  (cugo_motor_controllers[0].getCount()) * (( 2 * wheel_radius_l * PI) / encoder_resolution);
     Serial.print(String(abs(distance)));        
     Serial.print(F(" m　後に進んだ"));
     }else{
@@ -1088,9 +1253,9 @@ void check_achievement_go_forward_cmd(MotorController motor_controllers[2])// mo
 }
 
 
-void cmd_manager(MotorController motor_controllers[2])
+void cmd_manager(MotorController cugo_motor_controllers[MOTOR_NUM])
 {
-  if (cmd_init == false)
+  /*if (cmd_init == false)
   {
     Serial.println(F("##########################"));
     Serial.println(F("###   コマンド準備開始    ###"));
@@ -1102,11 +1267,11 @@ void cmd_manager(MotorController motor_controllers[2])
     // コマンド実行直前処理
     if (cmd_exec == false)
     {
-      cmd_manager_flags_init(motor_controllers);
+      cmd_manager_flags_init(cugo_motor_controllers);
       // 前後進の指示をセット
       if (count_done == false)
       {
-        set_go_forward_cmd(motor_controllers);
+        set_go_forward_cmd(cugo_motor_controllers);
       }
 
       // 待機の指示をセット
@@ -1146,15 +1311,15 @@ void cmd_manager(MotorController motor_controllers[2])
       if(arduino_flag_cmd_matrix[current_cmd][2] == 0 && arduino_flag_cmd_matrix[current_cmd][3] == 0)
       {
         //停止しているだけの時
-        motor_controllers[0].setTargetRpm(arduino_flag_cmd_matrix[current_cmd][2]);
-        motor_controllers[1].setTargetRpm(arduino_flag_cmd_matrix[current_cmd][3]);
+        cugo_motor_controllers[0].setTargetRpm(arduino_flag_cmd_matrix[current_cmd][2]);
+        cugo_motor_controllers[1].setTargetRpm(arduino_flag_cmd_matrix[current_cmd][3]);
 
       } else{
         // 各制御値の計算
-        l_count_p = arduino_count_cmd_matrix[current_cmd][0] - motor_controllers[0].getCount();
+        l_count_p = arduino_count_cmd_matrix[current_cmd][0] - cugo_motor_controllers[0].getCount();
         l_count_i = l_count_prev_i_ + l_count_p;
         l_count_d = l_count_p - l_count_prev_p_;
-        r_count_p = arduino_count_cmd_matrix[current_cmd][1] - motor_controllers[1].getCount();
+        r_count_p = arduino_count_cmd_matrix[current_cmd][1] - cugo_motor_controllers[1].getCount();
         r_count_i = r_count_prev_i_ + r_count_p;
         r_count_d = r_count_p - r_count_prev_p_;
 
@@ -1176,8 +1341,8 @@ void cmd_manager(MotorController motor_controllers[2])
 
            
         //位置制御
-        motor_controllers[MOTOR_LEFT].setTargetRpm(l_count_gain);
-        motor_controllers[MOTOR_RIGHT].setTargetRpm(r_count_gain);
+        cugo_motor_controllers[MOTOR_LEFT].setTargetRpm(l_count_gain);
+        cugo_motor_controllers[MOTOR_RIGHT].setTargetRpm(r_count_gain);
         //Serial.print(F("gain:l/r "));
         //Serial.print(String(l_count_gain));
         //Serial.print(F(","));
@@ -1187,13 +1352,13 @@ void cmd_manager(MotorController motor_controllers[2])
       // 成功条件の確認
       // if conuntの成功条件
       if (count_done == false)
-        check_achievement_go_forward_cmd(motor_controllers);
+        check_achievement_go_forward_cmd(cugo_motor_controllers);
 
       if (wait_done == false)
-        check_achievement_wait_time_cmd(motor_controllers);
+        check_achievement_wait_time_cmd(cugo_motor_controllers);
 
       if (button_done == false)
-        check_achievement_button_cmd(motor_controllers);
+        check_achievement_button_cmd(cugo_motor_controllers);
 
       if (spi_done == false)
         check_achievement_spi_cmd();
@@ -1222,17 +1387,17 @@ void cmd_manager(MotorController motor_controllers[2])
           Serial.println(F("##########################"));          
           reset_arduino_mode_flags();
           end_arduino_mode = false;
-          runMode = RC_MODE;
+          cugoRunMode = CUGO_RC_MODE;
           Serial.println(F("##########################"));                  
-          Serial.println(F("###   モード:RC_MODE    ###"));
+          Serial.println(F("###   モード:CUGO_RC_MODE    ###"));
           Serial.println(F("##########################"));            
         }
       }
     }
-  }
+  }*/
 }
 
-void check_achievement_button_cmd(MotorController motor_controllers[2])
+void check_achievement_button_cmd(MotorController cugo_motor_controllers[MOTOR_NUM])
 {
   if (digitalRead(CMD_BUTTON_PIN) == 0)
   {
@@ -1243,7 +1408,7 @@ void check_achievement_button_cmd(MotorController motor_controllers[2])
 
   if (button_push_count >= 5) // 実測で50ms以上長いと小刻みに押したとき反応しないと感じてしまう。
   {
-    stop_motor_immediately(motor_controllers);
+    stop_motor_immediately(cugo_motor_controllers);
     button_done = true;
     Serial.print(F("###"));
     if(current_cmd < 9)
@@ -1281,12 +1446,12 @@ void init_display()
 
 
 
-void job_100ms(MotorController motor_controllers[2])//100msごとに必要な情報を表示
+void job_100ms(MotorController cugo_motor_controllers[MOTOR_NUM])//100msごとに必要な情報を表示
 {
-  display_speed(motor_controllers,ENCODER_DISPLAY);
-  display_target_rpm(motor_controllers,ENCODER_DISPLAY);
-  display_PID(motor_controllers,PID_CONTROLL_DISPLAY);
-  display_failsafe(FAIL_SAFE_DISPLAY,runMode);
+  display_speed(cugo_motor_controllers,ENCODER_DISPLAY);
+  display_target_rpm(cugo_motor_controllers,ENCODER_DISPLAY);
+  display_PID(cugo_motor_controllers,PID_CONTROLL_DISPLAY);
+  display_failsafe(FAIL_SAFE_DISPLAY,cugoRunMode);
 }
 
 void job_1000ms()//1000msごとに必要な情報があれば表示
@@ -1294,11 +1459,11 @@ void job_1000ms()//1000msごとに必要な情報があれば表示
   display_nothing();
 }
 
-void display_detail(MotorController motor_controllers[2])
+void display_detail(MotorController cugo_motor_controllers[MOTOR_NUM])
 {
   if (current_time - prev_time_100ms > 100000) 
   {
-    job_100ms(motor_controllers);
+    job_100ms(cugo_motor_controllers);
     prev_time_100ms = current_time;
   }
 

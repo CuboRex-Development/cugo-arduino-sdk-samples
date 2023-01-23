@@ -1,13 +1,14 @@
-// CugoArduinoMode.h
-// CugoArduinoBeginnerProgramming用ライブラリ
+// CugoArduinoMiddle.h
+// CugoArduinoMiffdleUserProgramming用ライブラリ
 
-#ifndef CUGOARDUINOMIDDLE_H
-#define CUGOARDUINOMIDDKE_H
+#ifndef CUGOARDUINOMODE_H
+#define CUGOARDUINOMODE_H
 
 #include "Arduino.h"
 #include <SPI.h>
 #include <Servo.h>
 #include "MotorController.h"
+#include "CugoArduinoMiddle.h"
 
 // モータとエンコーダのピン配置設定
 #define PIN_MOTOR_L A0  // モータ出力ピン(L)
@@ -77,12 +78,12 @@
 
 
 // 動作モード定義
-#define RC_MODE 0
-#define ARDUINO_MODE 1
+#define CUGO_RC_MODE 0
+#define CUGO_ARDUINO_MODE 1
 
 //各種閾値
-#define ARDUINO_MODE_IN   1700  // ARDUINOモードに入るときの閾値(us) (1100~1900/中央1500)
-#define ARDUINO_MODE_OUT  1300  // ARDUINOモードから抜けるときの閾値(us) (1100~1900/中央1500)
+#define CUGO_ARDUINO_MODE_IN   1700  // ARDUINOモードに入るときの閾値(us) (1100~1900/中央1500)
+#define CUGO_ARDUINO_MODE_OUT  1300  // ARDUINOモードから抜けるときの閾値(us) (1100~1900/中央1500)
 #define CMD_SIZE 60 //　コマンド数上限
 #define EXCEPTION_NO -32768 //int下限
 
@@ -91,18 +92,23 @@
 #define MOTOR_LEFT 0
 #define MOTOR_RIGHT 1
 
-//PIN関連
+//PIN関連 //★ここはユーザがいじらないことをルール決め
 #define PIN_UP(no)    upTime[no] = micros();
 #define PIN_DOWN(no)  time[no] = micros() - upTime[no]
 #define PWM_IN_MAX    3
 
 // グローバル変数宣言
+
+//
+extern bool cugo_Bch_flag;//true:BchCUGO_ARDUINO_MODE_IN～CUGO_ARDUINO_MODE_OUTの間に入った
+extern int oldRunMode;
+
 extern long int arduino_count_cmd_matrix[CMD_SIZE][2];
 extern int arduino_flag_cmd_matrix[CMD_SIZE][4];
 extern int init_current_cmd;
 
-extern long int target_count_L;
-extern long int target_count_R;
+extern long int cugo_target_count_L;
+extern long int cugo_target_count_R;
 extern long int target_wait_time;
 extern int button_push_count;
 extern bool button_enable;
@@ -120,24 +126,21 @@ extern unsigned long long current_time;
 extern unsigned long long prev_time_10ms; 
 extern unsigned long long prev_time_100ms; 
 extern unsigned long long prev_time_1000ms; 
-extern int runMode;
+extern int cugoRunMode;
 extern bool UDP_CONNECTION_DISPLAY;
 extern bool ENCODER_DISPLAY;
 extern bool PID_CONTROLL_DISPLAY;
 extern bool FAIL_SAFE_DISPLAY;
 extern const bool L_reverse;
 extern const bool R_reverse;
-extern float l_count_prev_i_;
-extern float l_count_prev_p_;
-extern float r_count_prev_i_;
-extern float r_count_prev_p_;
-extern float l_count_gain;
-extern float r_count_gain;
+extern bool button_check;
+extern int OLD_CMD_BUTTON_VALUE; 
 extern int OLD_PWM_IN_PIN0_VALUE; 
 extern int OLD_PWM_IN_PIN1_VALUE; 
 extern int OLD_PWM_IN_PIN2_VALUE; 
 extern volatile unsigned long upTime[PWM_IN_MAX];
-extern volatile unsigned long rcTime[PWM_IN_MAX];
+extern volatile unsigned long cugoRcTime[PWM_IN_MAX];
+extern volatile unsigned long long cugoButtonTime;
 extern volatile unsigned long time[PWM_IN_MAX];
 
 
@@ -145,87 +148,85 @@ extern volatile unsigned long time[PWM_IN_MAX];
 //各種関数
   void init_display();
   void init_SPI();
-  void init_KOPROPO(int runMode,int OLD_PWM_IN_PIN0_VALUE,int OLD_PWM_IN_PIN1_VALUE,int OLD_PWM_IN_PIN2_VALUE);
+  void init_KOPROPO(int OLD_PWM_IN_PIN0_VALUE,int OLD_PWM_IN_PIN1_VALUE,int OLD_PWM_IN_PIN2_VALUE);
   void init_ARDUINO_CMD();
   void set_arduino_cmd_matrix(long int cmd_0,long  int cmd_1, int cmd_2, int cmd_3,int cmd_4,int cmd_5);
-  //void send_spi(int mode); //※使わない
-  //void view_arduino_cmd_matrix();
-  //void display_failsafe(bool FAIL_SAFE_DISPLAY,int runMode);
-  //void display_nothing();
-  //void spi_cmd(int spi_cmd_value);
+  void send_spi(int mode);
+  void view_arduino_cmd_matrix();
+  void display_failsafe(bool FAIL_SAFE_DISPLAY,int cugoRunMode);
+  void display_nothing();
+  void spi_cmd(int spi_cmd_value);
   void calc_necessary_rotate(float degree); 
   void calc_necessary_count(float distance); 
-  //void atamaopen();
-  //void atamaclose();
+  void atamaopen();
+  void atamaclose();
   void wait_button();
-  //void botan();
-  //void button();
-  //void display_speed(MotorController motor_controllers[2],bool ENCODER_DISPLAY); 
-  //void display_target_rpm(MotorController motor_controllers[2],bool ENCODER_DISPLAY);
-  //void display_PID(MotorController motor_controllers[2],bool PID_CONTROLL_DISPLAY);
-  //int split(String data, char delimiter, String *dst);
-  void motor_direct_instructions(int left, int right,MotorController motor_controllers[2]);
-  void rc_mode(volatile unsigned long rcTime[PWM_IN_MAX],MotorController motor_controllers[2]);
-  void stop_motor_immediately(MotorController motor_controllers[2]);
+  void botan();
+  void button();
+  void display_speed(MotorController cugo_motor_controllers[MOTOR_NUM],bool ENCODER_DISPLAY); 
+  void display_target_rpm(MotorController cugo_motor_controllers[MOTOR_NUM],bool ENCODER_DISPLAY);
+  void display_PID(MotorController cugo_motor_controllers[MOTOR_NUM],bool PID_CONTROLL_DISPLAY);
+  int split(String data, char delimiter, String *dst);
+  void cugo_motor_direct_instructions(int left, int right,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_rcmode(volatile unsigned long cugoRcTime[PWM_IN_MAX],MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void stop_motor_immediately(MotorController cugo_motor_controllers[MOTOR_NUM]);
   void set_wait_time_cmd();
   void wait_time(int milisec);
-  //void matsu(int milisec);
-  //void matu(int milisec);
-  void reset_pid_gain(MotorController motor_controllers[2]);
+  void matsu(int milisec);
+  void matu(int milisec);
+  void reset_pid_gain(MotorController cugo_motor_controllers[MOTOR_NUM]);
   void set_button_cmd();
   void go_backward(float distance,float max_velocity);
-  //void sagaru(float distance);
-  //void sagaru(float distance,float max_velocity);
+  void sagaru(float distance);
+  void sagaru(float distance,float max_velocity);
   void turn_clockwise(float degree,float max_velocity);
-  //void migimawari(float degree);
-  //void migimawari(float degree,float max_velocity);
-  //void migimawari90();
-  //void migimawari90(float max_velocity);
-  //void migimawari45();
-  //void migimawari45(float max_velocity);
-  //void migimawari180();
-  //void migimawari180(float max_velocity);
+  void migimawari(float degree);
+  void migimawari(float degree,float max_velocity);
+  void migimawari90();
+  void migimawari90(float max_velocity);
+  void migimawari45();
+  void migimawari45(float max_velocity);
+  void migimawari180();
+  void migimawari180(float max_velocity);
   void go_forward(float distance,float max_velocity);
-  //void susumu(float distance);
-  //void susumu(float distance,float max_velocity);
+  void susumu(float distance);
+  void susumu(float distance,float max_velocity);
   void turn_counter_clockwise(float degree,float max_velocity);
-  //void hidarimawari(float degree);
-  //void hidarimawari(float degree,float max_velocity);
-  //void hidarimawari90();
-  //void hidarimawari90(float max_velocity);
-  //void hidarimawari45();
-  //void hidarimawari45(float max_velocity);
-  //void hidarimawari180();
-  //void hidarimawari180(float max_velocity);
+  void hidarimawari(float degree);
+  void hidarimawari(float degree,float max_velocity);
+  void hidarimawari90();
+  void hidarimawari90(float max_velocity);
+  void hidarimawari45();
+  void hidarimawari45(float max_velocity);
+  void hidarimawari180();
+  void hidarimawari180(float max_velocity);
   void reset_arduino_mode_flags();
-  void set_go_forward_cmd(MotorController motor_controllers[2]);
-  //void view_flags();
-  //void check_achievement_spi_cmd();
-  //void cmd_end(MotorController motor_controllers[2]);
-  void check_achievement_wait_time_cmd(MotorController motor_controllers[2]);
-  //void cmd_manager_flags_init(MotorController motor_controllers[2]);  
-  void check_achievement_go_forward_cmd(MotorController motor_controllers[2]);
-  //void cmd_manager(MotorController motor_controllers[2]);
-  void check_achievement_button_cmd(MotorController motor_controllers[2]);
-  //void job_100ms(MotorController motor_controllers[2]);
-  //void job_1000ms();
-  //void display_detail(MotorController motor_controllers[2]);
+  void set_go_forward_cmd(MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void view_flags();
+  void check_achievement_spi_cmd();
+  void cmd_end(MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void check_achievement_wait_time_cmd(MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cmd_manager_flags_init(MotorController cugo_motor_controllers[MOTOR_NUM]);  
+  void check_achievement_go_forward_cmd(MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cmd_manager(MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void check_achievement_button_cmd(MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void job_100ms(MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void job_1000ms();
+  void display_detail(MotorController cugo_motor_controllers[MOTOR_NUM]);
 
-　//CugoArduinoMiddle用関数
-  void set_up_cugo_arduino_middle(); //CugoArduinoMiddleの初期設定
-  void cugo_motor_rpm_L(); //速度指定正負で正転後転 rpmとm/sでそれぞれほしい。
-  void cugo_get_rpm_L();  //モーターの速度を計測 rpmとm/sでそれぞれほしい。
-  void cugo_go_straight(); //前進制御 mで指定
-  void cugo_turn(); //回転 右回り正回転する度数を指定（正負対応）degreeとradianそれぞれ欲しい
-  void cugo_get_button_value(); //今この瞬間がおされているのか？
-  void cugo_count_button_times(); //ボタンの押された回数 A2 PCINTで見る必要あり 
-  void cugo_check_rc_mode(); //loop内に入れるこの中でラジコン操作　おまじない。フラグ分ける　ifで分岐
-  void cugo_chanege_rc_mode(); //自動走行モードからラジコンモードにプログラムで切り替える 
-  void cugo_check_distance_L(); //左クローラーの移動距離を算出　LとR　合成(distanceとdegree からベクトル方向と距離) 
-  void cugo_reset_distance_L(); //左クローラーの移動距離を初期化
-  void cugo_stop(); //強制的にcugoのクローラー動作を停止
-  void cugo_reset_count(); //カウント数のデータ取得と初期化　
-  void check_a_channel_value();  //ラジコン操作の数値（abc）
-  void cugo_wait_ms(); //delayの代替になるもの　
+/*-----------------------------------------------*/
+/*MiddleUser向け関数*/　//★motorclassのたんなるラップアップは不要
+  void cugo_init_middle();
+  void cugo_check_mode_change();
+  void cugo_wait_ms(int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  //void cugo_motor_setTargetRpm(float target_rpm_L);//LRで二ついる？//そもそもマスクするだけのものはいらないのでは？
+  void cugo_go(float target_distance,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,上限速度は速度90　PID入っている　★PID入れてるかどうかデータシートはつける
+  void cugo_go(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm　//PID入れる
+  void cugo_go_direct(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm　//PID入れない
 
+  int cugo_check_count_achivement(MotorController cugo_motor_controllers[MOTOR_NUM]);
+  
+  bool cugo_button_check();//★ボタンチックを返す
+
+  
 #endif
