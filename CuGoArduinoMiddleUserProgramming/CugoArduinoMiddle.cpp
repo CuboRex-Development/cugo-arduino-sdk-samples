@@ -134,7 +134,7 @@ void cugo_wait_ms(int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM])
     current_time = micros();
   }
 }
-void cugo_go(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM])//単位はm,rpm
+void cugo_go_direct(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM])//単位はm,rpm
 { 
   calc_necessary_count(target_distance);
   //★0入力でも動く可能性ありなので試験して距離０　速度０でそれぞれ動かないこと要確認
@@ -148,10 +148,11 @@ void cugo_go(float target_distance,float target_rpm,MotorController cugo_motor_c
       cugo_motor_controllers[i].driveMotor();//★PIDいれる？
     }    
   }
-  stop_motor_immediately(cugo_motor_controllers);         
+  stop_motor_immediately(cugo_motor_controllers);
+  reset_pid_gain(cugo_motor_controllers);         
 }
 
-void cugo_go(float target_distance,MotorController cugo_motor_controllers[MOTOR_NUM])//単位はm,上限速度
+void cugo_go(float target_distance,MotorController cugo_motor_controllers[MOTOR_NUM])//速度制限なし
 { 
   // PID位置制御の制御値
   float l_count_p =0 ;  // P制御値
@@ -198,8 +199,7 @@ void cugo_go(float target_distance,MotorController cugo_motor_controllers[MOTOR_
         r_count_prev_i_ = r_count_i;
 
         l_count_gain = min( max(l_count_gain,-MAX_MOTOR_RPM),MAX_MOTOR_RPM);//モーターの速度上限        
-        r_count_gain = min( max(r_count_gain,-MAX_MOTOR_RPM),MAX_MOTOR_RPM);//モーターの速度上限        
-        //★これを導入する？どこまで可変にする？      
+        r_count_gain = min( max(r_count_gain,-MAX_MOTOR_RPM),MAX_MOTOR_RPM);//モーターの速度上限             
         //l_count_gain = min( max(l_count_gain,-fabsf(arduino_flag_cmd_matrix[current_cmd][2])),fabsf(arduino_flag_cmd_matrix[current_cmd][2]));//ユーザ設定の速度上限        
         //r_count_gain = min( max(r_count_gain,-fabsf(arduino_flag_cmd_matrix[current_cmd][3])),fabsf(arduino_flag_cmd_matrix[current_cmd][3]));//ユーザ設定の速度上限  
            
@@ -213,9 +213,218 @@ void cugo_go(float target_distance,MotorController cugo_motor_controllers[MOTOR_
       cugo_motor_controllers[i].driveMotor();
     }    
   }
-  stop_motor_immediately(cugo_motor_controllers);         
+  stop_motor_immediately(cugo_motor_controllers); 
+  reset_pid_gain(cugo_motor_controllers);                 
+}
+void cugo_go(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM])//速度制限あり
+{ 
+  // PID位置制御の制御値
+  float l_count_p =0 ;  // P制御値
+  float l_count_i =0 ;  // I制御値    
+  float l_count_d =0 ;  // D制御値
+  float r_count_p =0 ;  // P制御値
+  float r_count_i =0 ;  // I制御値
+  float r_count_d =0 ;  // D制御値
+  // PID位置制御のデータ格納
+  float l_count_prev_i_ =0 ;
+  float l_count_prev_p_ =0 ;
+  float r_count_prev_i_ =0 ;
+  float r_count_prev_p_ =0 ;
+  float l_count_gain =0 ;
+  float r_count_gain =0 ;
+  
+  calc_necessary_count(target_distance);
+      
+  while(cugo_check_count_achivement(cugo_motor_controllers)){        
+      if(target_distance)
+      {
+        //停止しているだけの時
+        cugo_motor_controllers[MOTOR_LEFT].setTargetRpm(0);
+        cugo_motor_controllers[MOTOR_RIGHT].setTargetRpm(0);
+
+      } else{
+        // 各制御値の計算
+        l_count_p = cugo_target_count_L - cugo_motor_controllers[MOTOR_LEFT].getCount();
+        l_count_i = l_count_prev_i_ + l_count_p;
+        l_count_d = l_count_p - l_count_prev_p_;
+        r_count_p = cugo_target_count_R - cugo_motor_controllers[MOTOR_RIGHT].getCount();
+        r_count_i = r_count_prev_i_ + r_count_p;
+        r_count_d = r_count_p - r_count_prev_p_;
+
+        l_count_i = min( max(l_count_i,-L_MAX_COUNT_I),L_MAX_COUNT_I);        
+        r_count_i = min( max(r_count_i,-R_MAX_COUNT_I),R_MAX_COUNT_I);
+        // PID制御
+        l_count_gain = l_count_p * L_COUNT_KP + l_count_i * L_COUNT_KI + l_count_d * L_COUNT_KD;  
+        r_count_gain = r_count_p * R_COUNT_KP + r_count_i * R_COUNT_KI + r_count_d * R_COUNT_KD;  
+        // prev_ 更新
+        l_count_prev_p_ = l_count_p;
+        l_count_prev_i_ = l_count_i;
+        r_count_prev_p_ = r_count_p;
+        r_count_prev_i_ = r_count_i;
+
+        l_count_gain = min( max(l_count_gain,-MAX_MOTOR_RPM),MAX_MOTOR_RPM);//モーターの速度上限        
+        r_count_gain = min( max(r_count_gain,-MAX_MOTOR_RPM),MAX_MOTOR_RPM);//モーターの速度上限             
+        l_count_gain = min( max(l_count_gain,-fabsf(target_rpm)),fabsf(target_rpm));//ユーザ設定の速度上限        
+        r_count_gain = min( max(r_count_gain,-fabsf(target_rpm)),fabsf(target_rpm));//ユーザ設定の速度上限  
+           
+        //位置制御
+        cugo_motor_controllers[MOTOR_LEFT].setTargetRpm(l_count_gain);
+        cugo_motor_controllers[MOTOR_RIGHT].setTargetRpm(r_count_gain);
+      }
+         
+    for (int i = 0; i < MOTOR_NUM; i++){ 
+      cugo_motor_controllers[i].driveMotor();
+    }    
+  }
+  stop_motor_immediately(cugo_motor_controllers); 
+  reset_pid_gain(cugo_motor_controllers);                 
 }
 
+void cugo_turn_direct(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM])//単位はm,rpm
+{ 
+  calc_necessary_rotate(target_degree);
+  //★0入力でも動く可能性ありなので試験して距離０　速度０でそれぞれ動かないこと要確認
+  
+  for (int i = 0; i < MOTOR_NUM; i++) { 
+      cugo_motor_controllers[i].setTargetRpm(target_rpm);
+  }    
+    
+  while(cugo_check_count_achivement(cugo_motor_controllers)){        
+    for (int i = 0; i < MOTOR_NUM; i++){ 
+      cugo_motor_controllers[i].driveMotor();//★PIDいれる？
+    }    
+  }
+  stop_motor_immediately(cugo_motor_controllers);
+  reset_pid_gain(cugo_motor_controllers);         
+}
+
+void cugo_turn(float target_degree,MotorController cugo_motor_controllers[MOTOR_NUM])//速度制限なし
+{ 
+  // PID位置制御の制御値
+  float l_count_p =0 ;  // P制御値
+  float l_count_i =0 ;  // I制御値    
+  float l_count_d =0 ;  // D制御値
+  float r_count_p =0 ;  // P制御値
+  float r_count_i =0 ;  // I制御値
+  float r_count_d =0 ;  // D制御値
+  // PID位置制御のデータ格納
+  float l_count_prev_i_ =0 ;
+  float l_count_prev_p_ =0 ;
+  float r_count_prev_i_ =0 ;
+  float r_count_prev_p_ =0 ;
+  float l_count_gain =0 ;
+  float r_count_gain =0 ;
+  
+  calc_necessary_rotate(target_degree);
+      
+  while(cugo_check_count_achivement(cugo_motor_controllers)){        
+      if(target_degree)
+      {
+        //停止しているだけの時
+        cugo_motor_controllers[MOTOR_LEFT].setTargetRpm(0);
+        cugo_motor_controllers[MOTOR_RIGHT].setTargetRpm(0);
+
+      } else{
+        // 各制御値の計算
+        l_count_p = cugo_target_count_L - cugo_motor_controllers[MOTOR_LEFT].getCount();
+        l_count_i = l_count_prev_i_ + l_count_p;
+        l_count_d = l_count_p - l_count_prev_p_;
+        r_count_p = cugo_target_count_R - cugo_motor_controllers[MOTOR_RIGHT].getCount();
+        r_count_i = r_count_prev_i_ + r_count_p;
+        r_count_d = r_count_p - r_count_prev_p_;
+
+        l_count_i = min( max(l_count_i,-L_MAX_COUNT_I),L_MAX_COUNT_I);        
+        r_count_i = min( max(r_count_i,-R_MAX_COUNT_I),R_MAX_COUNT_I);
+        // PID制御
+        l_count_gain = l_count_p * L_COUNT_KP + l_count_i * L_COUNT_KI + l_count_d * L_COUNT_KD;  
+        r_count_gain = r_count_p * R_COUNT_KP + r_count_i * R_COUNT_KI + r_count_d * R_COUNT_KD;  
+        // prev_ 更新
+        l_count_prev_p_ = l_count_p;
+        l_count_prev_i_ = l_count_i;
+        r_count_prev_p_ = r_count_p;
+        r_count_prev_i_ = r_count_i;
+
+        l_count_gain = min( max(l_count_gain,-MAX_MOTOR_RPM),MAX_MOTOR_RPM);//モーターの速度上限        
+        r_count_gain = min( max(r_count_gain,-MAX_MOTOR_RPM),MAX_MOTOR_RPM);//モーターの速度上限             
+        //l_count_gain = min( max(l_count_gain,-fabsf(arduino_flag_cmd_matrix[current_cmd][2])),fabsf(arduino_flag_cmd_matrix[current_cmd][2]));//ユーザ設定の速度上限        
+        //r_count_gain = min( max(r_count_gain,-fabsf(arduino_flag_cmd_matrix[current_cmd][3])),fabsf(arduino_flag_cmd_matrix[current_cmd][3]));//ユーザ設定の速度上限  
+           
+        //位置制御
+        cugo_motor_controllers[MOTOR_LEFT].setTargetRpm(l_count_gain);
+        cugo_motor_controllers[MOTOR_RIGHT].setTargetRpm(r_count_gain);
+      }
+     
+    
+    for (int i = 0; i < MOTOR_NUM; i++){ 
+      cugo_motor_controllers[i].driveMotor();
+    }    
+  }
+  stop_motor_immediately(cugo_motor_controllers); 
+  reset_pid_gain(cugo_motor_controllers);                 
+}
+void cugo_turn(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM])//速度制限あり
+{ 
+  // PID位置制御の制御値
+  float l_count_p =0 ;  // P制御値
+  float l_count_i =0 ;  // I制御値    
+  float l_count_d =0 ;  // D制御値
+  float r_count_p =0 ;  // P制御値
+  float r_count_i =0 ;  // I制御値
+  float r_count_d =0 ;  // D制御値
+  // PID位置制御のデータ格納
+  float l_count_prev_i_ =0 ;
+  float l_count_prev_p_ =0 ;
+  float r_count_prev_i_ =0 ;
+  float r_count_prev_p_ =0 ;
+  float l_count_gain =0 ;
+  float r_count_gain =0 ;
+  
+  calc_necessary_count(target_degree);
+      
+  while(cugo_check_count_achivement(cugo_motor_controllers)){        
+      if(target_degree)
+      {
+        //停止しているだけの時
+        cugo_motor_controllers[MOTOR_LEFT].setTargetRpm(0);
+        cugo_motor_controllers[MOTOR_RIGHT].setTargetRpm(0);
+
+      } else{
+        // 各制御値の計算
+        l_count_p = cugo_target_count_L - cugo_motor_controllers[MOTOR_LEFT].getCount();
+        l_count_i = l_count_prev_i_ + l_count_p;
+        l_count_d = l_count_p - l_count_prev_p_;
+        r_count_p = cugo_target_count_R - cugo_motor_controllers[MOTOR_RIGHT].getCount();
+        r_count_i = r_count_prev_i_ + r_count_p;
+        r_count_d = r_count_p - r_count_prev_p_;
+
+        l_count_i = min( max(l_count_i,-L_MAX_COUNT_I),L_MAX_COUNT_I);        
+        r_count_i = min( max(r_count_i,-R_MAX_COUNT_I),R_MAX_COUNT_I);
+        // PID制御
+        l_count_gain = l_count_p * L_COUNT_KP + l_count_i * L_COUNT_KI + l_count_d * L_COUNT_KD;  
+        r_count_gain = r_count_p * R_COUNT_KP + r_count_i * R_COUNT_KI + r_count_d * R_COUNT_KD;  
+        // prev_ 更新
+        l_count_prev_p_ = l_count_p;
+        l_count_prev_i_ = l_count_i;
+        r_count_prev_p_ = r_count_p;
+        r_count_prev_i_ = r_count_i;
+
+        l_count_gain = min( max(l_count_gain,-MAX_MOTOR_RPM),MAX_MOTOR_RPM);//モーターの速度上限        
+        r_count_gain = min( max(r_count_gain,-MAX_MOTOR_RPM),MAX_MOTOR_RPM);//モーターの速度上限             
+        l_count_gain = min( max(l_count_gain,-fabsf(target_rpm)),fabsf(target_rpm));//ユーザ設定の速度上限        
+        r_count_gain = min( max(r_count_gain,-fabsf(target_rpm)),fabsf(target_rpm));//ユーザ設定の速度上限  
+           
+        //位置制御
+        cugo_motor_controllers[MOTOR_LEFT].setTargetRpm(l_count_gain);
+        cugo_motor_controllers[MOTOR_RIGHT].setTargetRpm(r_count_gain);
+      }
+         
+    for (int i = 0; i < MOTOR_NUM; i++){ 
+      cugo_motor_controllers[i].driveMotor();
+    }    
+  }
+  stop_motor_immediately(cugo_motor_controllers); 
+  reset_pid_gain(cugo_motor_controllers);                 
+}
 
 int cugo_check_count_achivement(MotorController cugo_motor_controllers[MOTOR_NUM])
 {

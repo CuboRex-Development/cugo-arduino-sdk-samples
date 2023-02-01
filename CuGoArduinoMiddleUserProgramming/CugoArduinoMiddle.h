@@ -216,15 +216,37 @@ extern volatile unsigned long time[PWM_IN_MAX];
 
 /*-----------------------------------------------*/
 /*MiddleUser向け関数*/　//★motorclassのたんなるラップアップは不要
+  //初期設定関数関連
   void cugo_init_middle();
   void cugo_check_mode_change();
   void cugo_wait_ms(int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM]);
-  //void cugo_motor_setTargetRpm(float target_rpm_L);//LRで二ついる？//そもそもマスクするだけのものはいらないのでは？
-  void cugo_go(float target_distance,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,上限速度は速度90　PID入っている　★PID入れてるかどうかデータシートはつける
+  //前進制御＆回転制御
+  //目標距離に前進または後進　位置制御あり
+  void cugo_go(float target_distance,MotorController cugo_motor_controllers[MOTOR_NUM]);PID入っている　★PID入れてるかどうかデータシートはつける
+  //目標距離と上限速度に従い前進または後進　位置制御あり
   void cugo_go(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm　//PID入れる
+  //目標距離と上限速度に従い前進または後進　位置制御なし
   void cugo_go_direct(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm　//PID入れない
-
+  //目標角度に回転　位置制御あり
+  void cugo_turn(float target_degree,MotorController cugo_motor_controllers[MOTOR_NUM]);　PID入っている　★PID入れてるかどうかデータシートはつける
+  //目標角度と上限速度に従い回転　位置制御あり
+  void cugo_turn(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm　//PID入れる
+  //目標角度と上限速度に従い自動で回転　位置制御なし
+  void cugo_turn_direct(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm　//PID入れない
+  //カウント数のチェック
   int cugo_check_count_achivement(MotorController cugo_motor_controllers[MOTOR_NUM]);
+  
+  //以下よく使うであろうMotorController
+  /*
+   * driveMotor():モーターへサーボ入力　入力値は事前に設定されたsetTargetRpmの値とPID速度制御から算出
+   * reset_PID_param() PIDのパラメータを初期化
+   * setTargetRpm(float target_rpm) 目標ＲＰＭを設定
+   * getTargetRpm()　目標RPM値を取得
+   * getCount()　現状のカウント数を把握
+   * getRpm()　現状のRPM値を取得　getrpmの前にcalcRpm()をしておくとより正確
+   * getSpeed() 現状の速度を取得
+  
+  */
   
   bool cugo_button_check();//★ボタンチックを返す
 
