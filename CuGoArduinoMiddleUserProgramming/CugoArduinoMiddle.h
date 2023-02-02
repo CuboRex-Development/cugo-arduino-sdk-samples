@@ -95,13 +95,16 @@
 //PIN関連 //★ここはユーザがいじらないことをルール決め
 #define PIN_UP(no)    upTime[no] = micros();
 #define PIN_DOWN(no)  time[no] = micros() - upTime[no]
-#define PWM_IN_MAX    3
-
+#define PWM_IN_MAX    4
+#define CUGO_BUTTON_CHECK_BORDER 50000
 // グローバル変数宣言
 
 //
 extern bool cugo_Bch_flag;//true:BchCUGO_ARDUINO_MODE_IN～CUGO_ARDUINO_MODE_OUTの間に入った
+extern bool cugo_button_flag;//true:BchCUGO_ARDUINO_MODE_IN～CUGO_ARDUINO_MODE_OUTの間に入った
 extern int oldRunMode;
+extern int cugo_button_count;
+
 
 extern long int arduino_count_cmd_matrix[CMD_SIZE][2];
 extern int arduino_flag_cmd_matrix[CMD_SIZE][4];
@@ -169,7 +172,7 @@ extern volatile unsigned long time[PWM_IN_MAX];
   int split(String data, char delimiter, String *dst);
   void cugo_motor_direct_instructions(int left, int right,MotorController cugo_motor_controllers[MOTOR_NUM]);
   void cugo_rcmode(volatile unsigned long cugoRcTime[PWM_IN_MAX],MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void stop_motor_immediately(MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_stop_motor_immediately(MotorController cugo_motor_controllers[MOTOR_NUM]);
   void set_wait_time_cmd();
   void wait_time(int milisec);
   void matsu(int milisec);
@@ -215,27 +218,36 @@ extern volatile unsigned long time[PWM_IN_MAX];
   void display_detail(MotorController cugo_motor_controllers[MOTOR_NUM]);
 
 /*-----------------------------------------------*/
-/*MiddleUser向け関数*/　//★motorclassのたんなるラップアップは不要
+/*MiddleUser向け関数*/ //★motorclassのたんなるラップアップは不要
   //初期設定関数関連
   void cugo_init_middle();
   void cugo_check_mode_change();
   void cugo_wait_ms(int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM]);
   //前進制御＆回転制御
   //目標距離に前進または後進　位置制御あり
-  void cugo_go(float target_distance,MotorController cugo_motor_controllers[MOTOR_NUM]);PID入っている　★PID入れてるかどうかデータシートはつける
+  void cugo_go(float target_distance,MotorController cugo_motor_controllers[MOTOR_NUM]);
   //目標距離と上限速度に従い前進または後進　位置制御あり
-  void cugo_go(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm　//PID入れる
+  void cugo_go(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
   //目標距離と上限速度に従い前進または後進　位置制御なし
-  void cugo_go_direct(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm　//PID入れない
+  void cugo_go_direct(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
   //目標角度に回転　位置制御あり
-  void cugo_turn(float target_degree,MotorController cugo_motor_controllers[MOTOR_NUM]);　PID入っている　★PID入れてるかどうかデータシートはつける
+  void cugo_turn(float target_degree,MotorController cugo_motor_controllers[MOTOR_NUM]);
   //目標角度と上限速度に従い回転　位置制御あり
-  void cugo_turn(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm　//PID入れる
+  void cugo_turn(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
   //目標角度と上限速度に従い自動で回転　位置制御なし
-  void cugo_turn_direct(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm　//PID入れない
+  void cugo_turn_direct(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
   //カウント数のチェック
   int cugo_check_count_achivement(MotorController cugo_motor_controllers[MOTOR_NUM]);
+
+  //モーター制御
+  int cugo_check_a_channel_value(); //現状のachの値取得
+  int cugo_check_b_channel_value(); //現状のbchの値取得
+  int cugo_check_c_channel_value(); //現状のcchの値取得
   
+  bool cugo_check_button(); //現状の押されているか
+  int cugo_check_button_times(); //現状の押された回数
+  void cugo_reset_button_times(); //現状の押された回数
+  int cugo_button_press_time(); //ボタンの押されている時間
   //以下よく使うであろうMotorController
   /*
    * driveMotor():モーターへサーボ入力　入力値は事前に設定されたsetTargetRpmの値とPID速度制御から算出
@@ -248,7 +260,5 @@ extern volatile unsigned long time[PWM_IN_MAX];
   
   */
   
-  bool cugo_button_check();//★ボタンチックを返す
-
   
 #endif

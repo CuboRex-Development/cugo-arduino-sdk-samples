@@ -30,6 +30,7 @@
 //void CMD_EXECUTE();//★消す
 void(*resetFunc)(void) = 0;
 
+#define PIN_SENSOR A3  // モータ出力ピン(L)
 
 //利用するモーター数の宣言
 MotorController cugo_motor_controllers[MOTOR_NUM];
@@ -51,7 +52,45 @@ void loop()
   }
   if (cugoRunMode == CUGO_ARDUINO_MODE){//ここから自動走行モードの記述 //★Arduinomodeではなくself-driveが良い？
   //サンプルコード記載
-  
+
+  cugo_wait_ms(100,cugo_motor_controllers);
+  Serial.println("wait done!1");
+  cugo_go(1.0,cugo_motor_controllers);
+  cugo_wait_ms(100,cugo_motor_controllers);
+  Serial.println("wait done!2");
+  cugo_go(-1.0,50,cugo_motor_controllers);
+  cugo_wait_ms(100,cugo_motor_controllers);
+  Serial.println("wait done!3");
+  cugo_go_direct(1.0,150,cugo_motor_controllers);
+  cugo_wait_ms(100,cugo_motor_controllers);
+  Serial.println("wait done!4");
+  cugo_turn(90,cugo_motor_controllers);
+  cugo_wait_ms(100,cugo_motor_controllers);
+  Serial.println("wait done!5");
+  cugo_turn(-90,20,cugo_motor_controllers);//単位はm,rpm
+  cugo_wait_ms(100,cugo_motor_controllers);
+  Serial.println("wait done!6");
+  cugo_turn_direct(45,30,cugo_motor_controllers);//単位はm,rpm
+  cugo_wait_ms(100,cugo_motor_controllers);
+  Serial.println("wait done!7");
+  Serial.println("各プロポ入力値");
+  Serial.print(String(cugo_check_a_channel_value()));   
+  Serial.print(String(cugo_check_b_channel_value()));   
+  Serial.println(String(cugo_check_c_channel_value())); 
+  Serial.println("各ボタン状態");    
+  Serial.print(String(cugo_check_button())); //現状の押されているか
+  Serial.print(String(cugo_check_button_times())); //現状の押された回数
+  Serial.println(String(cugo_button_press_time())); //ボタンの押されている時間
+  Serial.println("距離センサ");    
+  Serial.println(analogRead(PIN_SENSOR));
+    if(cugo_check_button_times() > 2){
+    cugo_reset_button_times(); //現状の押された回数  
+    }
+    if(analogRead(PIN_SENSOR) > 0.3){
+    Serial.println("flag!!");
+    cugo_stop_motor_immediately(cugo_motor_controllers);
+    }
+   
   }
   
   //current_time = micros();  // オーバーフローまで約40分
@@ -124,17 +163,23 @@ ISR(PCINT2_vect)
     OLD_PWM_IN_PIN2_VALUE = OLD_PWM_IN_PIN2_VALUE ? LOW : HIGH;
   }
 
-  if (OLD_CMD_BUTTON_VALUE != digitalRead(CMD_BUTTON_PIN))
-  {
-    if (LOW == OLD_CMD_BUTTON_VALUE)
-    { // 立ち上がり時の処理
+  if(OLD_CMD_BUTTON_VALUE != digitalRead(CMD_BUTTON_PIN)){
+    if(LOW == OLD_CMD_BUTTON_VALUE){ // 立ち上がり時の処理
       PIN_UP(3);
       button_check = true;//★ボタンはこれで判定でよいか？
     }
-    else
-    { // 立下り時の処理
+    else{ // 立下り時の処理
       PIN_DOWN(3);
       button_check = false;
+      if(CUGO_BUTTON_CHECK_BORDER < time[3] ){ 
+        if(cugo_button_flag){
+          cugo_button_count++;
+          cugo_button_flag =false;
+        }
+
+      }else{ 
+        cugo_button_flag =true;
+      }      
     }
     OLD_CMD_BUTTON_VALUE = OLD_CMD_BUTTON_VALUE ? LOW : HIGH;
   }  

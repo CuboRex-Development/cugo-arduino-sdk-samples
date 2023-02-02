@@ -17,8 +17,9 @@ const bool R_reverse = true;
 /***** ↑必要に応じて各ユーザーごとに設定可能↑ *****/
 
 bool cugo_Bch_flag = true;
+bool cugo_button_flag = true;
 int oldRunMode = CUGO_RC_MODE;
-
+int cugo_button_count =0;
 
 long int arduino_count_cmd_matrix[CMD_SIZE][2];//★消す
 int arduino_flag_cmd_matrix[CMD_SIZE][4];
@@ -61,6 +62,7 @@ void cugo_init_middle(){
   init_display();
   init_KOPROPO(OLD_PWM_IN_PIN0_VALUE,OLD_PWM_IN_PIN1_VALUE,OLD_PWM_IN_PIN2_VALUE);
   init_ARDUINO_CMD();//★消す
+  cugo_reset_button_times();
 
   pinMode(PIN_ENCODER_L_A, INPUT_PULLUP);     //A相用信号入力　入力割り込みpinを使用　内蔵プルアップ有効
   pinMode(PIN_ENCODER_L_B, INPUT_PULLUP);     //B相用信号入力　内蔵プルアップ有効
@@ -89,7 +91,7 @@ void cugo_check_mode_change()
       Serial.println(F("##########################"));                  
       Serial.println(F("### モード:CUGO_ARDUINO_MODE ###"));
       Serial.println(F("##########################"));            
-      stop_motor_immediately(cugo_motor_controllers);
+      cugo_stop_motor_immediately(cugo_motor_controllers);
      
       reset_arduino_mode_flags();
       reset_pid_gain(cugo_motor_controllers);
@@ -148,7 +150,7 @@ void cugo_go_direct(float target_distance,float target_rpm,MotorController cugo_
       cugo_motor_controllers[i].driveMotor();//★PIDいれる？
     }    
   }
-  stop_motor_immediately(cugo_motor_controllers);
+  cugo_stop_motor_immediately(cugo_motor_controllers);
   reset_pid_gain(cugo_motor_controllers);         
 }
 
@@ -213,7 +215,7 @@ void cugo_go(float target_distance,MotorController cugo_motor_controllers[MOTOR_
       cugo_motor_controllers[i].driveMotor();
     }    
   }
-  stop_motor_immediately(cugo_motor_controllers); 
+  cugo_stop_motor_immediately(cugo_motor_controllers); 
   reset_pid_gain(cugo_motor_controllers);                 
 }
 void cugo_go(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM])//速度制限あり
@@ -276,7 +278,7 @@ void cugo_go(float target_distance,float target_rpm,MotorController cugo_motor_c
       cugo_motor_controllers[i].driveMotor();
     }    
   }
-  stop_motor_immediately(cugo_motor_controllers); 
+  cugo_stop_motor_immediately(cugo_motor_controllers); 
   reset_pid_gain(cugo_motor_controllers);                 
 }
 
@@ -294,7 +296,7 @@ void cugo_turn_direct(float target_degree,float target_rpm,MotorController cugo_
       cugo_motor_controllers[i].driveMotor();//★PIDいれる？
     }    
   }
-  stop_motor_immediately(cugo_motor_controllers);
+  cugo_stop_motor_immediately(cugo_motor_controllers);
   reset_pid_gain(cugo_motor_controllers);         
 }
 
@@ -359,7 +361,7 @@ void cugo_turn(float target_degree,MotorController cugo_motor_controllers[MOTOR_
       cugo_motor_controllers[i].driveMotor();
     }    
   }
-  stop_motor_immediately(cugo_motor_controllers); 
+  cugo_stop_motor_immediately(cugo_motor_controllers); 
   reset_pid_gain(cugo_motor_controllers);                 
 }
 void cugo_turn(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM])//速度制限あり
@@ -422,7 +424,7 @@ void cugo_turn(float target_degree,float target_rpm,MotorController cugo_motor_c
       cugo_motor_controllers[i].driveMotor();
     }    
   }
-  stop_motor_immediately(cugo_motor_controllers); 
+  cugo_stop_motor_immediately(cugo_motor_controllers); 
   reset_pid_gain(cugo_motor_controllers);                 
 }
 
@@ -448,6 +450,46 @@ int cugo_check_count_achivement(MotorController cugo_motor_controllers[MOTOR_NUM
     } 
 
 }
+
+int cugo_check_a_channel_value(){
+  noInterrupts();      //割り込み停止
+  cugoRcTime[0] = time[0];
+  interrupts();     //割り込み開始  
+  return cugoRcTime[0];
+} 
+
+int cugo_check_b_channel_value(){
+  noInterrupts();      //割り込み停止
+  cugoRcTime[1] = time[1];
+  interrupts();     //割り込み開始  
+  return cugoRcTime[1];
+} 
+
+int cugo_check_c_channel_value(){
+  noInterrupts();      //割り込み停止
+  cugoRcTime[2] = time[2];
+  interrupts();     //割り込み開始  
+  return cugoRcTime[2];
+} 
+
+bool cugo_check_button(){
+  return button_check;  
+}
+int cugo_check_button_times(){
+  
+  return cugo_button_count;  
+}
+void cugo_reset_button_times(){
+  cugo_button_count = 0;
+}
+
+int cugo_button_press_time(){
+  noInterrupts();      //割り込み停止
+  cugoButtonTime = time[3];
+  interrupts();     //割り込み開始
+  return cugoButtonTime;  
+}
+
 
 /*-----------------------------------------------*/
 
@@ -626,7 +668,7 @@ void check_achievement_wait_time_cmd(MotorController cugo_motor_controllers[MOTO
   //Serial.println(F("#   check_achievement_wait_time_cmd"));//確認用
   if (target_wait_time < micros())
   {
-    stop_motor_immediately(cugo_motor_controllers);
+    cugo_stop_motor_immediately(cugo_motor_controllers);
     wait_done = true;
     Serial.print(F("###"));
     if(current_cmd < 9)
@@ -870,9 +912,9 @@ void cugo_rcmode(volatile unsigned long cugoRcTime[PWM_IN_MAX],MotorController c
   //Serial.println("input cmd:" + String(cugoRcTime[0]) + ", " + String(cugoRcTime[2]));
 }
 
-void stop_motor_immediately(MotorController cugo_motor_controllers[MOTOR_NUM])
+void cugo_stop_motor_immediately(MotorController cugo_motor_controllers[MOTOR_NUM])
 {
-  //Serial.println(F("#   stop_motor_immediately"));//確認用
+  //Serial.println(F("#   cugo_stop_motor_immediately"));//確認用
   cugo_motor_controllers[0].setTargetRpm(0.0);
   cugo_motor_controllers[1].setTargetRpm(0.0);
   cugo_motor_direct_instructions(1500, 1500,cugo_motor_controllers);
@@ -1377,7 +1419,7 @@ void cmd_manager_flags_init(MotorController cugo_motor_controllers[MOTOR_NUM])
     view_flags();
     view_arduino_cmd_matrix();
     Serial.println(F("複数コマンド入力。入力関数に不備があるか、コマンドを上書きしている可能性あり。"));
-    stop_motor_immediately(cugo_motor_controllers);
+    cugo_stop_motor_immediately(cugo_motor_controllers);
 
     while (1);
   }
@@ -1422,7 +1464,7 @@ void check_achievement_go_forward_cmd(MotorController cugo_motor_controllers[MOT
   // L/R達成していたら終了
   if (L_done == true && R_done == true)
   {
-    stop_motor_immediately(cugo_motor_controllers);
+    cugo_stop_motor_immediately(cugo_motor_controllers);
     count_done = true;
     Serial.print(F("###"));
     if(current_cmd < 9)
@@ -1617,7 +1659,7 @@ void check_achievement_button_cmd(MotorController cugo_motor_controllers[MOTOR_N
 
   if (button_push_count >= 5) // 実測で50ms以上長いと小刻みに押したとき反応しないと感じてしまう。
   {
-    stop_motor_immediately(cugo_motor_controllers);
+    cugo_stop_motor_immediately(cugo_motor_controllers);
     button_done = true;
     Serial.print(F("###"));
     if(current_cmd < 9)
