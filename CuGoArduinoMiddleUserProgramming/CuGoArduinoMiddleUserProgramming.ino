@@ -30,7 +30,7 @@
 //void CMD_EXECUTE();//★消す
 void(*resetFunc)(void) = 0;
 
-#define PIN_SENSOR A3  // モータ出力ピン(L)
+#define PIN_SENSOR A3  //   距離センサ用PIN
 
 //利用するモーター数の宣言
 MotorController cugo_motor_controllers[MOTOR_NUM];
@@ -128,7 +128,7 @@ ISR(PCINT2_vect)
     }
     else
     { // 立下り時の処理
-      PIN_DOWN(1);
+      PIN_DOWN(1);//たおした瞬間にリセットになっているかを確認
       if (CUGO_ARDUINO_MODE_IN < time[1])
       { //KOPPROのBchを右に倒すとArduinoリセット
       cugo_Bch_flag = false;
