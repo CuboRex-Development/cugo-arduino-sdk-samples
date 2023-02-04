@@ -28,6 +28,7 @@
 
 //プロトタイプ宣言
 //void CMD_EXECUTE();//★消す
+void cugo_setup();
 void(*resetFunc)(void) = 0;
 
 #define PIN_SENSOR A3  //   距離センサ用PIN
@@ -39,20 +40,23 @@ MotorController cugo_motor_controllers[MOTOR_NUM];
 void setup()
 {
   Serial.begin(115200);
-  cugo_setup_middle();
+  cugo_setup();
 
 }
 
 //loop内を繰り返し実行
 void loop()
 {
-  cugo_check_mode_change();
+  cugo_check_mode_change(cugo_motor_controllers);
   if (cugoRunMode == CUGO_RC_MODE){
+    
     cugo_rcmode(cugoRcTime,cugo_motor_controllers);//RC（ラジコン）操作
+    
   }
   if (cugoRunMode == CUGO_ARDUINO_MODE){//ここから自動走行モードの記述 //★Arduinomodeではなくself-driveが良い？
   //サンプルコード記載
-
+    cugo_wait_ms(100,cugo_motor_controllers);
+  /*
   cugo_wait_ms(100,cugo_motor_controllers);
   Serial.println("wait done!1");
   cugo_go(1.0,cugo_motor_controllers);
@@ -90,18 +94,9 @@ void loop()
     Serial.println("flag!!");
     cugo_stop_motor_immediately(cugo_motor_controllers);
     }
-   
+  */ 
   }
-  
-  //current_time = micros();  // オーバーフローまで約40分
-  /*
-  if (current_time - prev_time_10ms > 10000) 
-  {
-    job_10ms();
-    prev_time_10ms = current_time;
-  }
-  //display_detail(cugo_motor_controllers);//必要に応じてCugoArduinoModeの5～8行目を変更
-  */
+
 }
 
 //割り込み処理
@@ -131,21 +126,11 @@ ISR(PCINT2_vect)
       PIN_DOWN(1);//たおした瞬間にリセットになっているかを確認
       if (CUGO_ARDUINO_MODE_IN < time[1])
       { //KOPPROのBchを右に倒すとArduinoリセット
-      cugo_Bch_flag = false;
       resetFunc();
-      }else if (CUGO_ARDUINO_MODE_OUT > time[1])
+      } 
+      if (CUGO_ARDUINO_MODE_OUT > time[1])
       { //KOPPROのBchを左に倒すとモードフラグの変更
-        if(cugo_Bch_flag){
-          if (cugoRunMode == CUGO_RC_MODE){
             cugoRunMode = CUGO_ARDUINO_MODE;
-          }else if (cugoRunMode == CUGO_ARDUINO_MODE){
-            cugoRunMode = CUGO_RC_MODE;  
-          }
-          cugo_Bch_flag = false;
-        }
-      }else
-      {
-      cugo_Bch_flag = true;
       }       
     }
     OLD_PWM_IN_PIN1_VALUE = OLD_PWM_IN_PIN1_VALUE ? LOW : HIGH;
@@ -196,9 +181,9 @@ void arduino_mode()
 */
 
 //割り込み時の実行処理関連 
-void cugo_setup_middle()
+void cugo_setup()
 {
-  cugo_init_middle();
+  cugo_init();
 
   // LEFTインスタンス有効化
   cugo_motor_controllers[MOTOR_LEFT] = MotorController(PIN_ENCODER_L_A, PIN_ENCODER_L_B, PIN_MOTOR_L, 2048, 600, 100, L_LPF, L_KP, L_KI, L_KD, L_reverse);

@@ -100,7 +100,7 @@
 // グローバル変数宣言
 
 //
-extern bool cugo_Bch_flag;//true:BchCUGO_ARDUINO_MODE_IN～CUGO_ARDUINO_MODE_OUTの間に入った
+//extern bool cugo_Bch_flag;//true:BchCUGO_ARDUINO_MODE_IN～CUGO_ARDUINO_MODE_OUTの間に入った
 extern bool cugo_button_flag;//true:BchCUGO_ARDUINO_MODE_IN～CUGO_ARDUINO_MODE_OUTの間に入った
 extern int oldRunMode;
 extern int cugo_button_count;
@@ -220,8 +220,8 @@ extern volatile unsigned long time[PWM_IN_MAX];
 /*-----------------------------------------------*/
 /*MiddleUser向け関数*/ //★motorclassのたんなるラップアップは不要
   //初期設定関数関連
-  void cugo_init_middle();
-  void cugo_check_mode_change();
+  void cugo_init();
+  void cugo_check_mode_change(MotorController cugo_motor_controllers[MOTOR_NUM]);
   void cugo_wait_ms(int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM]);
   //前進制御＆回転制御
   //目標距離に前進または後進　位置制御あり

@@ -16,9 +16,9 @@ const bool R_reverse = true;
 
 /***** ↑必要に応じて各ユーザーごとに設定可能↑ *****/
 
-bool cugo_Bch_flag = true;
+//bool cugo_Bch_flag = true;
 bool cugo_button_flag = true;
-int oldRunMode = CUGO_RC_MODE;
+int oldRunMode = CUGO_ARDUINO_MODE;
 int cugo_button_count =0;
 
 long int arduino_count_cmd_matrix[CMD_SIZE][2];//★消す
@@ -58,7 +58,7 @@ volatile unsigned long long cugoButtonTime;
 
 /*-----------------------------------------------*/
 /*MiddleUser向け関数*/
-void cugo_init_middle(){
+void cugo_init(){
   init_display();
   init_KOPROPO(OLD_PWM_IN_PIN0_VALUE,OLD_PWM_IN_PIN1_VALUE,OLD_PWM_IN_PIN2_VALUE);
   init_ARDUINO_CMD();//★消す
@@ -72,7 +72,7 @@ void cugo_init_middle(){
 }
 
 //モード切り替わり確認
-void cugo_check_mode_change()
+void cugo_check_mode_change(MotorController cugo_motor_controllers[MOTOR_NUM])
 {
   noInterrupts();      //割り込み停止
   cugoRcTime[0] = time[0];
@@ -80,48 +80,27 @@ void cugo_check_mode_change()
   cugoRcTime[2] = time[2];
   cugoButtonTime = time[3];
   interrupts();     //割り込み開始
-
-/*
-  if (CUGO_ARDUINO_MODE_IN < cugoRcTime[1])
-  {
-    if (cugoRunMode != CUGO_ARDUINO_MODE)
-    { 
-      
-      // モードが変わった時(RC→ARDUINO)
-      Serial.println(F("##########################"));                  
-      Serial.println(F("### モード:CUGO_ARDUINO_MODE ###"));
-      Serial.println(F("##########################"));            
-      cugo_stop_motor_immediately(cugo_motor_controllers);
-     
-      reset_arduino_mode_flags();
-      reset_pid_gain(cugo_motor_controllers);
-    }
-    cugoRunMode = CUGO_ARDUINO_MODE;
-  }
   
-  if (CUGO_ARDUINO_MODE_OUT > cugoRcTime[1])
-  {
-    if (cugoRunMode != CUGO_RC_MODE)
-    { // モードが変わった時(ARDUINO→RC)
-      Serial.println(F("##########################"));                  
-      Serial.println(F("###   モード:CUGO_RC_MODE    ###"));
-      Serial.println(F("##########################"));            
-      reset_arduino_mode_flags();
-    }
-    cugoRunMode = CUGO_RC_MODE;
-  }
-  */
-  if (cugoRunMode == CUGO_ARDUINO_MODE && oldRunMode == CUGO_RC_MODE)
+  //Serial.print(F("cugo : old =  "));
+  //Serial.print(String(cugoRunMode));
+  //Serial.println(String(oldRunMode));
+  if ((cugoRunMode == CUGO_ARDUINO_MODE) && (oldRunMode == CUGO_RC_MODE))
   {
     Serial.println(F("### モード:CUGO_ARDUINO_MODE ###"));
     digitalWrite(LED_BUILTIN, HIGH);  // CUGO_ARDUINO_MODEでLED点灯           
-    oldRunMode == CUGO_ARDUINO_MODE;
+    oldRunMode = CUGO_ARDUINO_MODE;
+    reset_pid_gain(cugo_motor_controllers);
+    cugo_motor_direct_instructions(1500, 1500,cugo_motor_controllers); //直接停止命令を出す
+    delay(100); // すぐに別の値でモータを回そうとするとガクガクするので落ち着くまで待つ。10ms程度でも問題なし。    
   }
   if(cugoRunMode == CUGO_RC_MODE && oldRunMode == CUGO_ARDUINO_MODE)
   {
     Serial.println(F("###   モード:CUGO_RC_MODE    ###"));
     digitalWrite(LED_BUILTIN, LOW); // CUGO_RC_MODEでLED消灯
-    oldRunMode == CUGO_RC_MODE;            
+    oldRunMode = CUGO_RC_MODE;            
+    reset_pid_gain(cugo_motor_controllers);
+    cugo_motor_direct_instructions(1500, 1500,cugo_motor_controllers); //直接停止命令を出す
+    delay(100); // すぐに別の値でモータを回そうとするとガクガクするので落ち着くまで待つ。10ms程度でも問題なし。    
   }                       
 }
 
@@ -1672,27 +1651,30 @@ void check_achievement_button_cmd(MotorController cugo_motor_controllers[MOTOR_N
 
 void init_display()
 {
-  Serial.println(F(""));
-  Serial.println(F(""));  
-  Serial.println(F("#######################################"));
-  Serial.println(F("#######################################"));
-  Serial.println(F("#                                     #"));
-  Serial.println(F("#   ####    ##  ##    ####     ####   #"));
-  Serial.println(F("#  ##  ##   ##  ##   ##  ##   ##  ##  #"));
-  Serial.println(F("#  ##       ##  ##   ##       ##  ##  #"));
-  Serial.println(F("#  ##       ##  ##   ## ###   ##  ##  #"));
-  Serial.println(F("#  ##       ##  ##   ##  ##   ##  ##  #"));
-  Serial.println(F("#  ##  ##   ##  ##   ##  ##   ##  ##  #"));
-  Serial.println(F("#   ####     ####     ####     ####   #"));
-  Serial.println(F("#                                     #"));
-  Serial.println(F("#######################################"));
-  Serial.println(F("#######################################"));
-  Serial.println(F(""));
-  Serial.println(F(""));  
-  Serial.println(F("##########################"));  
-  Serial.println(F("### CugoAruduinoKit起動 ###"));
-  Serial.println(F("##########################"));
-   
+  delay(30);
+/*  
+  Serial.println("");
+  Serial.println("");  
+  Serial.println("#######################################");
+  Serial.println("#######################################");
+  Serial.println("#                                     #");
+  Serial.println("#   ####    ##  ##    ####     ####   #");
+  Serial.println("#  ##  ##   ##  ##   ##  ##   ##  ##  #");
+  Serial.println("#  ##       ##  ##   ##       ##  ##  #");
+  Serial.println("#  ##       ##  ##   ## ###   ##  ##  #");
+  Serial.println("#  ##       ##  ##   ##  ##   ##  ##  #");
+  Serial.println("#  ##  ##   ##  ##   ##  ##   ##  ##  #");
+  Serial.println("#   ####     ####     ####     ####   #");
+  Serial.println("#                                     #");
+  Serial.println("#######################################");
+  Serial.println("#######################################");
+  Serial.println("");
+  Serial.println("");  
+*/
+  Serial.println("###############################");  
+  Serial.println("###   CugoAruduinoKit起動  　###");
+  Serial.println("###############################");  
+
 }
 
 
