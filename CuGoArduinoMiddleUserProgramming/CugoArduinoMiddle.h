@@ -9,6 +9,8 @@
 #include <Servo.h>
 #include "MotorController.h"
 #include "CugoArduinoMiddle.h"
+#include <avr/io.h>
+#include <avr/interrupt.h>
 
 // モータとエンコーダのピン配置設定
 #define PIN_MOTOR_L A0  // モータ出力ピン(L)
@@ -60,15 +62,15 @@
 //const float R_LPF = 0.2;
 
 // PID位置制御のゲイン調整
-#define L_COUNT_KP  0.04f
-#define L_COUNT_KI  0.003f 
-#define L_COUNT_KD  0.01f
-#define R_COUNT_KP  0.04f
-#define R_COUNT_KI  0.003f 
-#define R_COUNT_KD  0.01f
+#define L_COUNT_KP  1.0f
+#define L_COUNT_KI  0.01f 
+#define L_COUNT_KD  30.0f
+#define R_COUNT_KP  1.0f
+#define R_COUNT_KI  0.01f 
+#define R_COUNT_KD  300.0f
 
-#define L_MAX_COUNT_I  9000.0f //速度上限を設定している場合はiは必ず0に
-#define R_MAX_COUNT_I  9000.0f //速度上限を設定している場合はiは必ず0に
+#define L_MAX_COUNT_I  30 //速度上限を設定している場合はiは必ず0に
+#define R_MAX_COUNT_I  30 //速度上限を設定している場合はiは必ず0に
 
 
 #define CONTROLL_STOP_count  1000
@@ -222,7 +224,7 @@ extern volatile unsigned long time[PWM_IN_MAX];
   //初期設定関数関連
   void cugo_init();
   void cugo_check_mode_change(MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void cugo_wait_ms(int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_wait_ms(unsigned long int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM]);
   //前進制御＆回転制御
   //目標距離に前進または後進　位置制御あり
   void cugo_go(float target_distance,MotorController cugo_motor_controllers[MOTOR_NUM]);
@@ -238,7 +240,7 @@ extern volatile unsigned long time[PWM_IN_MAX];
   void cugo_turn_direct(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
   //カウント数のチェック
   int cugo_check_count_achivement(MotorController cugo_motor_controllers[MOTOR_NUM]);
-
+  void cugo_move_pid(float target_rpm,bool use_pid,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
   //モーター制御
   int cugo_check_a_channel_value(); //現状のachの値取得
   int cugo_check_b_channel_value(); //現状のbchの値取得
@@ -247,7 +249,7 @@ extern volatile unsigned long time[PWM_IN_MAX];
   bool cugo_check_button(); //現状の押されているか
   int cugo_check_button_times(); //現状の押された回数
   void cugo_reset_button_times(); //現状の押された回数
-  int cugo_button_press_time(); //ボタンの押されている時間
+  long int cugo_button_press_time(); //ボタンの押されている時間
   //以下よく使うであろうMotorController
   /*
    * driveMotor():モーターへサーボ入力　入力値は事前に設定されたsetTargetRpmの値とPID速度制御から算出

@@ -25,6 +25,8 @@
 #include <SPI.h>
 #include "CugoArduinoMiddle.h"
 #include "MotorController.h"
+#include <avr/io.h>
+#include <avr/interrupt.h>
 
 //プロトタイプ宣言
 //void CMD_EXECUTE();//★消す
@@ -55,7 +57,33 @@ void loop()
   }
   if (cugoRunMode == CUGO_ARDUINO_MODE){//ここから自動走行モードの記述 //★Arduinomodeではなくself-driveが良い？
   //サンプルコード記載
+    Serial.println("#Arduinoコード開始");
+    Serial.println("##Ach : " + String(cugo_check_a_channel_value()) + " ,Bch : " + String(cugo_check_b_channel_value()) + " ,Cch : " + String(cugo_check_c_channel_value()));
+    //Serial.println("check");
+    Serial.println("##Button_status : " + String(cugo_check_button()));
+    //Serial.println("check");
+    Serial.println("##Button_times : " + String(cugo_check_button_times()));
+    //Serial.println("check");
+    if(cugo_check_button_times() > 5) {
+      cugo_reset_button_times();   
+    }
+    Serial.println("##Button_time : " + String(cugo_button_press_time()));
+
     cugo_wait_ms(100,cugo_motor_controllers);
+    //cugo_go_direct(1.0,1,cugo_motor_controllers); //1m 進むのに8秒進んでいる　speedは160くらい　1rpm指定?
+    //cugo_wait_ms(2000,cugo_motor_controllers);
+    //cugo_go(-1.0,cugo_motor_controllers);
+    //cugo_wait_ms(2000,cugo_motor_controllers);
+    //cugo_go(-1.0,0.2,cugo_motor_controllers);
+    //cugo_wait_ms(2000,cugo_motor_controllers);
+    //cugo_turn_direct(90,20,cugo_motor_controllers);
+    //cugo_wait_ms(2000,cugo_motor_controllers);
+    //cugo_turn(-90,cugo_motor_controllers);
+    //cugo_wait_ms(2000,cugo_motor_controllers);
+    //cugo_turn(45,0.5,cugo_motor_controllers);
+    
+    
+    cugo_stop_motor_immediately(cugo_motor_controllers);
   /*
   cugo_wait_ms(100,cugo_motor_controllers);
   Serial.println("wait done!1");
@@ -94,7 +122,8 @@ void loop()
     Serial.println("flag!!");
     cugo_stop_motor_immediately(cugo_motor_controllers);
     }
-  */ 
+  */
+      Serial.println("Arduinoコード終了"); 
   }
 
 }
@@ -155,15 +184,15 @@ ISR(PCINT2_vect)
     }
     else{ // 立下り時の処理
       PIN_DOWN(3);
+      PIN_UP(3);
       button_check = false;
       if(CUGO_BUTTON_CHECK_BORDER < time[3] ){ 
-        if(cugo_button_flag){
+//        if(cugo_button_flag){
           cugo_button_count++;
           cugo_button_flag =false;
-        }
-
-      }else{ 
-        cugo_button_flag =true;
+//        }else{ 
+          cugo_button_flag =true;
+//        }
       }      
     }
     OLD_CMD_BUTTON_VALUE = OLD_CMD_BUTTON_VALUE ? LOW : HIGH;
