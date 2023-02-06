@@ -63,6 +63,8 @@ void loop()
     Serial.println("##Button_status : " + String(cugo_check_button()));
     //Serial.println("check");
     Serial.println("##Button_times : " + String(cugo_check_button_times()));
+    Serial.println("##sensor : " + String(analogRead(PIN_SENSOR)));
+    
     //Serial.println("check");
     if(cugo_check_button_times() > 5) {
       cugo_reset_button_times();   

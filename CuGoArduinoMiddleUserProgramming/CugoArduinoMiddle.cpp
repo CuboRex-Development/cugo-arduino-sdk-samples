@@ -272,7 +272,7 @@ int cugo_check_c_channel_value(){
 } 
 
 bool cugo_check_button(){
-  return button_check;  
+  return button_check;  //いる？か
 }
 int cugo_check_button_times(){
   
