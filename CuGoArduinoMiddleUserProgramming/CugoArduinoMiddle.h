@@ -174,7 +174,7 @@ extern volatile unsigned long time[PWM_IN_MAX];
   int split(String data, char delimiter, String *dst);
   void cugo_motor_direct_instructions(int left, int right,MotorController cugo_motor_controllers[MOTOR_NUM]);
   void cugo_rcmode(volatile unsigned long cugoRcTime[PWM_IN_MAX],MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void cugo_stop_motor_immediately(MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_stop(MotorController cugo_motor_controllers[MOTOR_NUM]);
   void set_wait_time_cmd();
   void wait_time(int milisec);
   void matsu(int milisec);
@@ -224,20 +224,28 @@ extern volatile unsigned long time[PWM_IN_MAX];
   //初期設定関数関連
   void cugo_init();
   void cugo_check_mode_change(MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void cugo_wait_ms(unsigned long int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_keep_speed_ms(unsigned long int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM]);
+
   //前進制御＆回転制御
   //目標距離に前進または後進　位置制御あり
-  void cugo_go(float target_distance,MotorController cugo_motor_controllers[MOTOR_NUM]);
-  //目標距離と上限速度に従い前進または後進　位置制御あり
-  void cugo_go(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
-  //目標距離と上限速度に従い前進または後進　位置制御なし
-  void cugo_go_direct(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
+  void cugo_move_forward(float target_distance,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_move_forward(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
+  void cugo_move_forward_raw(float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
   //目標角度に回転　位置制御あり
-  void cugo_turn(float target_degree,MotorController cugo_motor_controllers[MOTOR_NUM]);
-  //目標角度と上限速度に従い回転　位置制御あり
-  void cugo_turn(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
-  //目標角度と上限速度に従い自動で回転　位置制御なし
-  void cugo_turn_direct(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
+  void cugo_turn_clockwise(float target_degree,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_turn_clockwise(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
+  void cugo_turn_clockwise_raw(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
+  void cugo_turn_counterclockwise(float target_degree,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_turn_counterclockwise(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
+  void cugo_turn_counterclockwise_raw(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm  
+  //極座標での移動命令
+  void cugo_polar_coordinates_theta(float target_radius,float target_theta,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_polar_coordinates_theta(float target_radius,float target_theta,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_polar_coordinates_theta_raw(float target_radius,float target_theta,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_polar_coordinates_distance(float target_radius,float target_disttance,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_polar_coordinates_distance(float target_radius,float target_disttance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_polar_coordinates_distance_raw(float target_radius,float target_disttance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);
+
   //カウント数のチェック
   int cugo_check_count_achivement(MotorController cugo_motor_controllers[MOTOR_NUM]);
   void cugo_move_pid(float target_rpm,bool use_pid,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
@@ -250,6 +258,7 @@ extern volatile unsigned long time[PWM_IN_MAX];
   int cugo_check_button_times(); //現状の押された回数
   void cugo_reset_button_times(); //現状の押された回数
   long int cugo_button_press_time(); //ボタンの押されている時間
+  
   //以下よく使うであろうMotorController
   /*
    * driveMotor():モーターへサーボ入力　入力値は事前に設定されたsetTargetRpmの値とPID速度制御から算出

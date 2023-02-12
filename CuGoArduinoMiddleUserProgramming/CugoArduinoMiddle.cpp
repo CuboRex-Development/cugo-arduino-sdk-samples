@@ -105,7 +105,7 @@ void cugo_check_mode_change(MotorController cugo_motor_controllers[MOTOR_NUM])
   }                       
 }
 
-void cugo_wait_ms(unsigned long int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM])
+void cugo_keep_speed_ms(unsigned long int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM])
 { //wait値の範囲は0から4,294,967,295micors 最大71.58278825分//★これでよいか？
   unsigned long int cugo_target_wait_time = micros()+ wait_ms*1000;
   //Serial.print("wait_ms::"+String(cugo_target_wait_time/1000));
@@ -196,7 +196,7 @@ void cugo_move_pid(float target_rpm,bool use_pid,MotorController cugo_motor_cont
     }    
   }
   Serial.println("距離："+String(conversion_count_to_distance*cugo_motor_controllers[0].getCount()));
-  cugo_stop_motor_immediately(cugo_motor_controllers); 
+  cugo_stop(cugo_motor_controllers); 
   reset_pid_gain(cugo_motor_controllers);                 
 }
 void cugo_go(float target_distance,MotorController cugo_motor_controllers[MOTOR_NUM])//速度制限なし
@@ -484,7 +484,7 @@ void check_achievement_wait_time_cmd(MotorController cugo_motor_controllers[MOTO
   //Serial.println(F("#   check_achievement_wait_time_cmd"));//確認用
   if (target_wait_time < micros())
   {
-    cugo_stop_motor_immediately(cugo_motor_controllers);
+    cugo_stop(cugo_motor_controllers);
     wait_done = true;
     Serial.print(F("###"));
     if(current_cmd < 9)
@@ -728,9 +728,9 @@ void cugo_rcmode(volatile unsigned long cugoRcTime[PWM_IN_MAX],MotorController c
   //Serial.println("input cmd:" + String(cugoRcTime[0]) + ", " + String(cugoRcTime[2]));
 }
 
-void cugo_stop_motor_immediately(MotorController cugo_motor_controllers[MOTOR_NUM])
+void cugo_stop(MotorController cugo_motor_controllers[MOTOR_NUM])
 {
-  //Serial.println(F("#   cugo_stop_motor_immediately"));//確認用
+  //Serial.println(F("#   cugo_stop"));//確認用
   cugo_motor_controllers[0].setTargetRpm(0.0);
   cugo_motor_controllers[1].setTargetRpm(0.0);
   cugo_motor_direct_instructions(1500, 1500,cugo_motor_controllers);
@@ -1235,7 +1235,7 @@ void cmd_manager_flags_init(MotorController cugo_motor_controllers[MOTOR_NUM])
     view_flags();
     view_arduino_cmd_matrix();
     Serial.println(F("複数コマンド入力。入力関数に不備があるか、コマンドを上書きしている可能性あり。"));
-    cugo_stop_motor_immediately(cugo_motor_controllers);
+    cugo_stop(cugo_motor_controllers);
 
     while (1);
   }
@@ -1280,7 +1280,7 @@ void check_achievement_go_forward_cmd(MotorController cugo_motor_controllers[MOT
   // L/R達成していたら終了
   if (L_done == true && R_done == true)
   {
-    cugo_stop_motor_immediately(cugo_motor_controllers);
+    cugo_stop(cugo_motor_controllers);
     count_done = true;
     Serial.print(F("###"));
     if(current_cmd < 9)
@@ -1475,7 +1475,7 @@ void check_achievement_button_cmd(MotorController cugo_motor_controllers[MOTOR_N
 
   if (button_push_count >= 5) // 実測で50ms以上長いと小刻みに押したとき反応しないと感じてしまう。
   {
-    cugo_stop_motor_immediately(cugo_motor_controllers);
+    cugo_stop(cugo_motor_controllers);
     button_done = true;
     Serial.print(F("###"));
     if(current_cmd < 9)

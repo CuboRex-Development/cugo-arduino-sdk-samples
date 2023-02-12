@@ -50,10 +50,8 @@ void setup()
 void loop()
 {
   cugo_check_mode_change(cugo_motor_controllers);
-  if (cugoRunMode == CUGO_RC_MODE){
-    
-    cugo_rcmode(cugoRcTime,cugo_motor_controllers);//RC（ラジコン）操作
-    
+  if (cugoRunMode == CUGO_RC_MODE){    
+    cugo_rcmode(cugoRcTime,cugo_motor_controllers);//RC（ラジコン）操作    
   }
   if (cugoRunMode == CUGO_ARDUINO_MODE){//ここから自動走行モードの記述 //★Arduinomodeではなくself-driveが良い？
   //サンプルコード記載
@@ -85,7 +83,7 @@ void loop()
     //cugo_turn(45,0.5,cugo_motor_controllers);
     
     
-    cugo_stop_motor_immediately(cugo_motor_controllers);
+    cugo_stop(cugo_motor_controllers);
   /*
   cugo_wait_ms(100,cugo_motor_controllers);
   Serial.println("wait done!1");
@@ -122,7 +120,7 @@ void loop()
     }
     if(analogRead(PIN_SENSOR) > 0.3){
     Serial.println("flag!!");
-    cugo_stop_motor_immediately(cugo_motor_controllers);
+    cugo_stop(cugo_motor_controllers);
     }
   */
       Serial.println("Arduinoコード終了"); 
@@ -189,12 +187,7 @@ ISR(PCINT2_vect)
       PIN_UP(3);
       button_check = false;
       if(CUGO_BUTTON_CHECK_BORDER < time[3] ){ 
-//        if(cugo_button_flag){
           cugo_button_count++;
-          cugo_button_flag =false;
-//        }else{ 
-          cugo_button_flag =true;
-//        }
       }      
     }
     OLD_CMD_BUTTON_VALUE = OLD_CMD_BUTTON_VALUE ? LOW : HIGH;
