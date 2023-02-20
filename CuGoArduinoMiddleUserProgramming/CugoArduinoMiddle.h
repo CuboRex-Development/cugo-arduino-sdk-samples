@@ -9,8 +9,6 @@
 #include <Servo.h>
 #include "MotorController.h"
 #include "CugoArduinoMiddle.h"
-#include <avr/io.h>
-#include <avr/interrupt.h>
 
 // モータとエンコーダのピン配置設定
 #define PIN_MOTOR_L A0  // モータ出力ピン(L)
@@ -29,13 +27,11 @@
 #define wheel_radius_l  0.03858d
 #define wheel_radius_r  0.03858d
 #define tread  0.380d
-#define encoder_resolution  2048.0d
+#define encoder_resolution  2048.0d 
 #define MAX_MOTOR_RPM 180 //モータの速度上限値
 //↑の仕様が変更される場合は下の変換係数も変更してください。
 #define conversion_distance_to_count 8448.660535308492d // 変換係数： encoder_resolution / (2 * wheel_radius_l * PI)の計算結果
 #define conversion_count_to_distance 0.000118361958d    // 変換係数： 2 * wheel_radius_l * PI  / encoder_resolution の計算結果
-
-//encoder_resolution / (2 * wheel_radius_l * PI);
 
 // PID ゲイン調整
 // L側
@@ -69,15 +65,11 @@
 #define R_COUNT_KI  0.01f 
 #define R_COUNT_KD  300.0f
 
-#define L_MAX_COUNT_I  30 //速度上限を設定している場合はiは必ず0に
-#define R_MAX_COUNT_I  30 //速度上限を設定している場合はiは必ず0に
-
-
-#define CONTROLL_STOP_count  1000
+#define L_MAX_COUNT_I  30 
+#define R_MAX_COUNT_I  30 
 
 // Arduinoキットのスタートボタン
 #define CMD_BUTTON_PIN A2 
-
 
 // 動作モード定義
 #define CUGO_RC_MODE 0
@@ -86,7 +78,6 @@
 //各種閾値
 #define CUGO_ARDUINO_MODE_IN   1700  // ARDUINOモードに入るときの閾値(us) (1100~1900/中央1500)
 #define CUGO_ARDUINO_MODE_OUT  1300  // ARDUINOモードから抜けるときの閾値(us) (1100~1900/中央1500)
-#define CMD_SIZE 60 //　コマンド数上限
 #define EXCEPTION_NO -32768 //int下限
 
 //モーター設定
@@ -94,51 +85,26 @@
 #define MOTOR_LEFT 0
 #define MOTOR_RIGHT 1
 
-//PIN関連 //★ここはユーザがいじらないことをルール決め
+//PIN関連 
 #define PIN_UP(no)    upTime[no] = micros();
 #define PIN_DOWN(no)  time[no] = micros() - upTime[no]
 #define PWM_IN_MAX    4
 #define CUGO_BUTTON_CHECK_BORDER 50000
 // グローバル変数宣言
 
-//
-//extern bool cugo_Bch_flag;//true:BchCUGO_ARDUINO_MODE_IN～CUGO_ARDUINO_MODE_OUTの間に入った
-extern bool cugo_button_flag;//true:BchCUGO_ARDUINO_MODE_IN～CUGO_ARDUINO_MODE_OUTの間に入った
-extern int oldRunMode;
+extern int cugo_old_runmode;
 extern int cugo_button_count;
+extern float cugo_odometer;
+extern long int cugo_count_prev_L;
+extern long int cugo_count_prev_R;
 
-
-extern long int arduino_count_cmd_matrix[CMD_SIZE][2];
-extern int arduino_flag_cmd_matrix[CMD_SIZE][4];
-extern int init_current_cmd;
 
 extern long int cugo_target_count_L;
 extern long int cugo_target_count_R;
-extern long int target_wait_time;
-extern int button_push_count;
-extern bool button_enable;
-extern bool cmd_init;
-extern int current_cmd;
-extern bool cmd_L_back;
-extern bool cmd_R_back;
-extern bool cmd_exec;
-extern bool count_done;
-extern bool wait_done;
-extern bool button_done;
-extern bool spi_done;
-extern bool end_arduino_mode;
-extern unsigned long long current_time;
-extern unsigned long long prev_time_10ms; 
-extern unsigned long long prev_time_100ms; 
-extern unsigned long long prev_time_1000ms; 
 extern int cugoRunMode;
-extern bool UDP_CONNECTION_DISPLAY;
-extern bool ENCODER_DISPLAY;
-extern bool PID_CONTROLL_DISPLAY;
-extern bool FAIL_SAFE_DISPLAY;
 extern const bool L_reverse;
 extern const bool R_reverse;
-extern bool button_check;
+extern bool cugo_button_check;
 extern int OLD_CMD_BUTTON_VALUE; 
 extern int OLD_PWM_IN_PIN0_VALUE; 
 extern int OLD_PWM_IN_PIN1_VALUE; 
@@ -152,72 +118,10 @@ extern volatile unsigned long time[PWM_IN_MAX];
 
 //各種関数
   void init_display();
-  void init_SPI();
   void init_KOPROPO(int OLD_PWM_IN_PIN0_VALUE,int OLD_PWM_IN_PIN1_VALUE,int OLD_PWM_IN_PIN2_VALUE);
-  void init_ARDUINO_CMD();
-  void set_arduino_cmd_matrix(long int cmd_0,long  int cmd_1, int cmd_2, int cmd_3,int cmd_4,int cmd_5);
-  void send_spi(int mode);
-  void view_arduino_cmd_matrix();
-  void display_failsafe(bool FAIL_SAFE_DISPLAY,int cugoRunMode);
-  void display_nothing();
-  void spi_cmd(int spi_cmd_value);
   void calc_necessary_rotate(float degree); 
   void calc_necessary_count(float distance); 
-  void atamaopen();
-  void atamaclose();
-  void wait_button();
-  void botan();
-  void button();
-  void display_speed(MotorController cugo_motor_controllers[MOTOR_NUM],bool ENCODER_DISPLAY); 
-  void display_target_rpm(MotorController cugo_motor_controllers[MOTOR_NUM],bool ENCODER_DISPLAY);
-  void display_PID(MotorController cugo_motor_controllers[MOTOR_NUM],bool PID_CONTROLL_DISPLAY);
-  int split(String data, char delimiter, String *dst);
-  void cugo_motor_direct_instructions(int left, int right,MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void cugo_rcmode(volatile unsigned long cugoRcTime[PWM_IN_MAX],MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void cugo_stop(MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void set_wait_time_cmd();
-  void wait_time(int milisec);
-  void matsu(int milisec);
-  void matu(int milisec);
   void reset_pid_gain(MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void set_button_cmd();
-  void go_backward(float distance,float max_velocity);
-  void sagaru(float distance);
-  void sagaru(float distance,float max_velocity);
-  void turn_clockwise(float degree,float max_velocity);
-  void migimawari(float degree);
-  void migimawari(float degree,float max_velocity);
-  void migimawari90();
-  void migimawari90(float max_velocity);
-  void migimawari45();
-  void migimawari45(float max_velocity);
-  void migimawari180();
-  void migimawari180(float max_velocity);
-  void go_forward(float distance,float max_velocity);
-  void susumu(float distance);
-  void susumu(float distance,float max_velocity);
-  void turn_counter_clockwise(float degree,float max_velocity);
-  void hidarimawari(float degree);
-  void hidarimawari(float degree,float max_velocity);
-  void hidarimawari90();
-  void hidarimawari90(float max_velocity);
-  void hidarimawari45();
-  void hidarimawari45(float max_velocity);
-  void hidarimawari180();
-  void hidarimawari180(float max_velocity);
-  void reset_arduino_mode_flags();
-  void set_go_forward_cmd(MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void view_flags();
-  void check_achievement_spi_cmd();
-  void cmd_end(MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void check_achievement_wait_time_cmd(MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void cmd_manager_flags_init(MotorController cugo_motor_controllers[MOTOR_NUM]);  
-  void check_achievement_go_forward_cmd(MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void cmd_manager(MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void check_achievement_button_cmd(MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void job_100ms(MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void job_1000ms();
-  void display_detail(MotorController cugo_motor_controllers[MOTOR_NUM]);
 
 /*-----------------------------------------------*/
 /*MiddleUser向け関数*/ //★motorclassのたんなるラップアップは不要
@@ -225,6 +129,12 @@ extern volatile unsigned long time[PWM_IN_MAX];
   void cugo_init();
   void cugo_check_mode_change(MotorController cugo_motor_controllers[MOTOR_NUM]);
   void cugo_keep_speed_ms(unsigned long int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_keep_stop_ms(unsigned long int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM]);
+
+  void cugo_motor_direct_instructions(int left, int right,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_rcmode(volatile unsigned long cugoRcTime[PWM_IN_MAX],MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_stop(MotorController cugo_motor_controllers[MOTOR_NUM]);
+
 
   //前進制御＆回転制御
   //目標距離に前進または後進　位置制御あり
@@ -239,11 +149,7 @@ extern volatile unsigned long time[PWM_IN_MAX];
   void cugo_turn_counterclockwise(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
   void cugo_turn_counterclockwise_raw(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm  
   //極座標での移動命令
-  void cugo_polar_coordinates_theta(float target_radius,float target_theta,MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void cugo_polar_coordinates_theta(float target_radius,float target_theta,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);
   void cugo_polar_coordinates_theta_raw(float target_radius,float target_theta,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void cugo_polar_coordinates_distance(float target_radius,float target_disttance,MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void cugo_polar_coordinates_distance(float target_radius,float target_disttance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);
   void cugo_polar_coordinates_distance_raw(float target_radius,float target_disttance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);
 
   //カウント数のチェック
@@ -258,7 +164,11 @@ extern volatile unsigned long time[PWM_IN_MAX];
   int cugo_check_button_times(); //現状の押された回数
   void cugo_reset_button_times(); //現状の押された回数
   long int cugo_button_press_time(); //ボタンの押されている時間
-  
+  //オドメトリ計算
+  float cugo_check_odometer(int check_number,MotorController cugo_motor_controllers[MOTOR_NUM]); 
+  void cugo_calc_odometer(MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_reset_odometer(int check_number);
+
   //以下よく使うであろうMotorController
   /*
    * driveMotor():モーターへサーボ入力　入力値は事前に設定されたsetTargetRpmの値とPID速度制御から算出
