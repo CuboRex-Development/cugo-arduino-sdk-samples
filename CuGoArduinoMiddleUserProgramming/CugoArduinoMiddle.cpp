@@ -107,7 +107,7 @@ void cugo_keep_speed_ms(unsigned long int wait_ms,MotorController cugo_motor_con
   //Serial.println(":: wait done!" + String(cugo_current_time/1000));
 }
 void cugo_keep_stop_ms(unsigned long int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM]){
-  //wait値の範囲は0から4,294,967,295micors 最大71.58278825分//★これでよいか？
+  //wait値の範囲は0から4,294,967,295micors 最大71.58278825分//★これでよいか？//追加時間分
   cugo_stop(cugo_motor_controllers);
   unsigned long long int cugo_target_wait_time = micros()+ wait_ms*1000;
   //Serial.print("wait_ms::"+String(cugo_target_wait_time/1000));
@@ -170,13 +170,14 @@ void cugo_move_pid(float target_rpm,bool use_pid,MotorController cugo_motor_cont
         l_count_prev_i_ = l_count_i;
         r_count_prev_p_ = r_count_p;
         r_count_prev_i_ = r_count_i;
-        Serial.print("pidgain::" + String(l_count_p * L_COUNT_KP)+" ,"+String(l_count_i * L_COUNT_KI)+" ,"+String(l_count_d * L_COUNT_KD));    
-        Serial.println("  gain::" + String(l_count_gain));    
+        //Serial.print("pidgain::" + String(l_count_p * L_COUNT_KP)+" ,"+String(l_count_i * L_COUNT_KI)+" ,"+String(l_count_d * L_COUNT_KD));    
+        //Serial.println("  gain::" + String(l_count_gain));    
         l_count_gain = min( max(l_count_gain,-MAX_MOTOR_RPM),MAX_MOTOR_RPM);//モーターの速度上限        
         r_count_gain = min( max(r_count_gain,-MAX_MOTOR_RPM),MAX_MOTOR_RPM);//モーターの速度上限             
         l_count_gain = min( max(l_count_gain,-fabsf(target_rpm)),fabsf(target_rpm));//ユーザ設定の速度上限        
         r_count_gain = min( max(r_count_gain,-fabsf(target_rpm)),fabsf(target_rpm));//ユーザ設定の速度上限  
-           
+        Serial.println("L::" String(cugo_motor_controllers[0].getCount()) + "R::" + String(cugo_motor_controllers[1].getCount()));
+   
         //位置制御
         cugo_motor_controllers[MOTOR_LEFT].setTargetRpm(l_count_gain);
         cugo_motor_controllers[MOTOR_RIGHT].setTargetRpm(r_count_gain);

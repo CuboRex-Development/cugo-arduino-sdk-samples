@@ -46,8 +46,8 @@ void loop()
   cugo_check_mode_change(cugo_motor_controllers);
   if (cugoRunMode == CUGO_RC_MODE){    
     cugo_rcmode(cugoRcTime,cugo_motor_controllers);//RC（ラジコン）操作   
-    Serial.println("L::" + String(cugo_motor_controllers[0].getTargetRpm()) + "," + String(cugo_motor_controllers[0].getRpm()) + "," +  String(cugo_motor_controllers[0].getCount()));
-    Serial.println("R::" + String(cugo_motor_controllers[1].getTargetRpm()) + "," + String(cugo_motor_controllers[1].getRpm()) + "," +  String(cugo_motor_controllers[1].getCount()));
+    //Serial.println("L::" + String(cugo_motor_controllers[0].getTargetRpm()) + "," + String(cugo_motor_controllers[0].getRpm()) + "," +  String(cugo_motor_controllers[0].getCount()));
+    //Serial.println("R::" + String(cugo_motor_controllers[1].getTargetRpm()) + "," + String(cugo_motor_controllers[1].getRpm()) + "," +  String(cugo_motor_controllers[1].getCount()));
     //Serial.println(F("#   cugo_motor_direct_instructions"));//確認用
     //cugo_motor_controllers[0].servo_.writeMicroseconds(0);
     //cugo_motor_controllers[1].servo_.writeMicroseconds(0);
@@ -67,11 +67,11 @@ void loop()
       cugo_reset_button_times();   
     }
     Serial.println("##Button_time : " + String(cugo_button_press_time()));
-
+    cugo_move_forward(1.0,cugo_motor_controllers);
+    cugo_keep_stop_ms(2000,cugo_motor_controllers);
     //cugo_keep_speed_ms(100,cugo_motor_controllers);
-    cugo_keep_speed_ms(100,cugo_motor_controllers);
-    //cugo_go_direct(1.0,1,cugo_motor_controllers); //1m 進むのに8秒進んでいる　speedは160くらい　1rpm指定?
-    //cugo_wait_ms(2000,cugo_motor_controllers);
+//    cugo_keep_speed_ms(100,cugo_motor_controllers);
+    //cugo__direct(1.0,1,cugo_motor_controllers); //1m 進むのに8秒進んでいる　speedは160くらい　1rpm指定?
     //cugo_go(-1.0,cugo_motor_controllers);
     //cugo_wait_ms(2000,cugo_motor_controllers);
     //cugo_go(-1.0,0.2,cugo_motor_controllers);
