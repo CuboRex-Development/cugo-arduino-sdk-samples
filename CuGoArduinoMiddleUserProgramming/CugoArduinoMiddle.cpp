@@ -1,6 +1,6 @@
 #include "CugoArduinoMiddle.h"
-#include <avr/io.h>
-#include <avr/interrupt.h>
+#include "Arduino.h"
+
 /***** ↓必要に応じて各ユーザーごとに設定可能↓ *****/
 // 回転方向ソフトウェア切り替え
 const bool L_reverse = false;
@@ -29,6 +29,19 @@ volatile unsigned long upTime[PWM_IN_MAX];
 volatile unsigned long cugoRcTime[PWM_IN_MAX];
 volatile unsigned long time[PWM_IN_MAX];
 volatile unsigned long long cugoButtonTime;
+
+
+/*
+MotorController cugo_motor_controllers[MOTOR_NUM] = {
+  MotorController(PIN_ENCODER_L_A, PIN_ENCODER_L_B, PIN_MOTOR_L, 2048, 600, 100, L_LPF, L_KP, L_KI, L_KD, L_reverse),
+  MotorController(PIN_ENCODER_R_A, PIN_ENCODER_R_B, PIN_MOTOR_R, 2048, 600, 100, R_LPF, R_KP, R_KI, R_KD, R_reverse)
+};
+*/
+
+// LEFTインスタンス有効化
+//  cugo_motor_controllers[MOTOR_LEFT] = MotorController(PIN_ENCODER_L_A, PIN_ENCODER_L_B, PIN_MOTOR_L, 2048, 600, 100, L_LPF, L_KP, L_KI, L_KD, L_reverse);
+// RIGHTインスタンス有効化
+//  cugo_motor_controllers[MOTOR_RIGHT] = MotorController(PIN_ENCODER_R_A, PIN_ENCODER_R_B, PIN_MOTOR_R, 2048, 600, 100, R_LPF, R_KP, R_KI, R_KD, R_reverse);
 
 /*-----------------------------------------------*/
 /*MiddleUser向け関数*/
@@ -77,6 +90,7 @@ void cugo_check_mode_change(MotorController cugo_motor_controllers[MOTOR_NUM])
   }                       
 }
 void cugo_keep_speed_ms(unsigned long int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM]){ 
+//void cugo_keep_speed_ms(unsigned long int wait_ms){ 
   //wait値の範囲は0から4,294,967,295micors 最大71.58278825分//★これでよいか？
   unsigned long long int cugo_target_wait_time = micros()+ wait_ms*1000;
   //Serial.print("wait_ms::"+String(cugo_target_wait_time/1000));
@@ -275,6 +289,7 @@ int cugo_check_count_achivement(MotorController cugo_motor_controllers[MOTOR_NUM
     }    
     //Serial.println("count::" + String(cugo_motor_controllers[MOTOR_LEFT].getCount()));
     cugo_keep_speed_ms(5,cugo_motor_controllers);    
+    //    cugo_keep_speed_ms(5,cugo_motor_controllers);    
     if(L_done && R_done){
     return 0;        
     }else{

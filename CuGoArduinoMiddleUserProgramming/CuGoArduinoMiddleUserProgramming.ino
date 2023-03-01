@@ -20,16 +20,15 @@
  *  詳細はREADME.mdをご確認ください。
  ****************************************************************************/
 #include <Arduino.h>
-#include <Servo.h>
-#include <SPI.h>
 #include "CugoArduinoMiddle.h"
-#include "MotorController.h"
 
-//プロトタイプ宣言
-void cugo_setup();
-void(*resetFunc)(void) = 0;
+
 //利用するモーターの宣言
 MotorController cugo_motor_controllers[MOTOR_NUM];
+
+//プロトタイプ宣言
+void(*resetFunc)(void) = 0;
+
 
 // 距離センサをりようするサンプルプログラム用
 #define PIN_SENSOR A3  //   距離センサ用PIN
@@ -46,7 +45,12 @@ void loop()
 {
   cugo_check_mode_change(cugo_motor_controllers);
   if (cugoRunMode == CUGO_RC_MODE){    
-    cugo_rcmode(cugoRcTime,cugo_motor_controllers);//RC（ラジコン）操作    
+    cugo_rcmode(cugoRcTime,cugo_motor_controllers);//RC（ラジコン）操作   
+    Serial.println("L::" + String(cugo_motor_controllers[0].getTargetRpm()) + "," + String(cugo_motor_controllers[0].getRpm()) + "," +  String(cugo_motor_controllers[0].getCount()));
+    Serial.println("R::" + String(cugo_motor_controllers[1].getTargetRpm()) + "," + String(cugo_motor_controllers[1].getRpm()) + "," +  String(cugo_motor_controllers[1].getCount()));
+    //Serial.println(F("#   cugo_motor_direct_instructions"));//確認用
+    //cugo_motor_controllers[0].servo_.writeMicroseconds(0);
+    //cugo_motor_controllers[1].servo_.writeMicroseconds(0);
   }
   if (cugoRunMode == CUGO_ARDUINO_MODE){//ここから自動走行モードの記述 //★Arduinomodeではなくself-driveが良い？
   //サンプルコード記載
@@ -64,6 +68,7 @@ void loop()
     }
     Serial.println("##Button_time : " + String(cugo_button_press_time()));
 
+    //cugo_keep_speed_ms(100,cugo_motor_controllers);
     cugo_keep_speed_ms(100,cugo_motor_controllers);
     //cugo_go_direct(1.0,1,cugo_motor_controllers); //1m 進むのに8秒進んでいる　speedは160くらい　1rpm指定?
     //cugo_wait_ms(2000,cugo_motor_controllers);
@@ -187,6 +192,7 @@ ISR(PCINT2_vect)
     OLD_CMD_BUTTON_VALUE = OLD_CMD_BUTTON_VALUE ? LOW : HIGH;
   }  
 }
+
 //CUGOのセットアップ関連 
 void cugo_setup()
 { //初期化実行

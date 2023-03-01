@@ -1,14 +1,8 @@
-// CugoArduinoMiddle.h
 // CugoArduinoMiffdleUserProgramming用ライブラリ
-
 #ifndef CUGOARDUINOMODE_H
 #define CUGOARDUINOMODE_H
 
-#include "Arduino.h"
-#include <SPI.h>
-#include <Servo.h>
 #include "MotorController.h"
-#include "CugoArduinoMiddle.h"
 
 // モータとエンコーダのピン配置設定
 #define PIN_MOTOR_L A0  // モータ出力ピン(L)
@@ -114,6 +108,7 @@ extern volatile unsigned long cugoRcTime[PWM_IN_MAX];
 extern volatile unsigned long long cugoButtonTime;
 extern volatile unsigned long time[PWM_IN_MAX];
 
+//extern MotorController cugo_motor_controllers[MOTOR_NUM];
 
 
 //各種関数
@@ -168,6 +163,11 @@ extern volatile unsigned long time[PWM_IN_MAX];
   float cugo_check_odometer(int check_number,MotorController cugo_motor_controllers[MOTOR_NUM]); 
   void cugo_calc_odometer(MotorController cugo_motor_controllers[MOTOR_NUM]);
   void cugo_reset_odometer(int check_number);
+
+//void cugo_setup();
+//void cugoLeftEncHandler();
+//void cugoRightEncHandler();
+
 
   //以下よく使うであろうMotorController
   /*
