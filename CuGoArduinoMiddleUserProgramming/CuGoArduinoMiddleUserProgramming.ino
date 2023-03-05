@@ -67,7 +67,13 @@ void loop()
       cugo_reset_button_times();   
     }
     Serial.println("##Button_time : " + String(cugo_button_press_time()));
-    cugo_move_forward(1.0,cugo_motor_controllers);
+    cugo_move_forward_raw(0.5,10,cugo_motor_controllers);
+    cugo_keep_stop_ms(2000,cugo_motor_controllers);
+    cugo_move_forward_raw(-0.5,10,cugo_motor_controllers);    
+    cugo_keep_stop_ms(2000,cugo_motor_controllers);
+    cugo_move_forward(0.5,30,cugo_motor_controllers);
+    cugo_keep_stop_ms(2000,cugo_motor_controllers);
+    cugo_move_forward(-0.5,30,cugo_motor_controllers);
     cugo_keep_stop_ms(2000,cugo_motor_controllers);
     //cugo_keep_speed_ms(100,cugo_motor_controllers);
 //    cugo_keep_speed_ms(100,cugo_motor_controllers);
@@ -179,6 +185,8 @@ ISR(PCINT2_vect)
   if(OLD_CMD_BUTTON_VALUE != digitalRead(CMD_BUTTON_PIN)){
     if(LOW == OLD_CMD_BUTTON_VALUE){ // 立ち上がり時の処理
       PIN_UP(3);
+      //PIN_DOWN(3);
+
       cugo_button_check = false;//★ボタンはこれで判定でよいか？
     }
     else{ // 立下り時の処理
@@ -190,7 +198,8 @@ ISR(PCINT2_vect)
       }      
     }
     OLD_CMD_BUTTON_VALUE = OLD_CMD_BUTTON_VALUE ? LOW : HIGH;
-  }  
+  }
+    
 }
 
 //CUGOのセットアップ関連 

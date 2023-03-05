@@ -51,16 +51,29 @@
 //const float L_LPF = 0.2;
 //const float R_LPF = 0.2;
 
+/*
 // PID位置制御のゲイン調整
-#define L_COUNT_KP  1.0f
-#define L_COUNT_KI  0.01f 
-#define L_COUNT_KD  30.0f
-#define R_COUNT_KP  1.0f
-#define R_COUNT_KI  0.01f 
-#define R_COUNT_KD  300.0f
+#define L_COUNT_KP  0.04f
+#define L_COUNT_KI  0.003f 
+#define L_COUNT_KD  0.01f
+#define R_COUNT_KP  0.04f
+#define R_COUNT_KI  0.003f 
+#define R_COUNT_KD  0.01f
 
-#define L_MAX_COUNT_I  30 
-#define R_MAX_COUNT_I  30 
+#define L_MAX_COUNT_I  9000.0f //速度上限を設定している場合はiは必ず0に
+#define R_MAX_COUNT_I  9000.0f //速度上限を設定している場合はiは必ず0に
+*/
+
+// PID位置制御のゲイン調整
+#define L_COUNT_KP  50.0f
+#define L_COUNT_KI  0.1f 
+#define L_COUNT_KD  10.0f
+#define R_COUNT_KP  50.0f
+#define R_COUNT_KI  0.1f 
+#define R_COUNT_KD  10.0f
+
+#define L_MAX_COUNT_I  900 
+#define R_MAX_COUNT_I  200 
 
 // Arduinoキットのスタートボタン
 #define CMD_BUTTON_PIN A2 
@@ -73,6 +86,7 @@
 #define CUGO_ARDUINO_MODE_IN   1700  // ARDUINOモードに入るときの閾値(us) (1100~1900/中央1500)
 #define CUGO_ARDUINO_MODE_OUT  1300  // ARDUINOモードから抜けるときの閾値(us) (1100~1900/中央1500)
 #define EXCEPTION_NO -32768 //int下限
+#define NORMAL_MOTOR_RPM 50
 
 //モーター設定
 #define MOTOR_NUM 2 // モータ接続数（最大4の予定）
@@ -114,8 +128,8 @@ extern volatile unsigned long time[PWM_IN_MAX];
 //各種関数
   void init_display();
   void init_KOPROPO(int OLD_PWM_IN_PIN0_VALUE,int OLD_PWM_IN_PIN1_VALUE,int OLD_PWM_IN_PIN2_VALUE);
-  void calc_necessary_rotate(float degree); 
-  void calc_necessary_count(float distance); 
+  void calc_necessary_rotate(float degree,MotorController cugo_motor_controllers[MOTOR_NUM]); 
+  void calc_necessary_count(float distance,MotorController cugo_motor_controllers[MOTOR_NUM]); 
   void reset_pid_gain(MotorController cugo_motor_controllers[MOTOR_NUM]);
 
 /*-----------------------------------------------*/
@@ -148,7 +162,7 @@ extern volatile unsigned long time[PWM_IN_MAX];
   void cugo_polar_coordinates_distance_raw(float target_radius,float target_disttance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);
 
   //カウント数のチェック
-  int cugo_check_count_achivement(MotorController cugo_motor_controllers[MOTOR_NUM]);
+  bool cugo_check_count_achivement(int motor_num_,MotorController cugo_motor_controllers[MOTOR_NUM]);
   void cugo_move_pid(float target_rpm,bool use_pid,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
   //モーター制御
   int cugo_check_a_channel_value(); //現状のachの値取得
