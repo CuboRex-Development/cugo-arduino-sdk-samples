@@ -65,15 +65,16 @@
 */
 
 // PID位置制御のゲイン調整
+
 #define L_COUNT_KP  50.0f
-#define L_COUNT_KI  0.1f 
+#define L_COUNT_KI  0.5f 
 #define L_COUNT_KD  10.0f
 #define R_COUNT_KP  50.0f
-#define R_COUNT_KI  0.1f 
+#define R_COUNT_KI  0.5f 
 #define R_COUNT_KD  10.0f
 
-#define L_MAX_COUNT_I  900 
-#define R_MAX_COUNT_I  200 
+#define L_MAX_COUNT_I  120 
+#define R_MAX_COUNT_I  120 
 
 // Arduinoキットのスタートボタン
 #define CMD_BUTTON_PIN A2 
@@ -112,6 +113,9 @@ extern long int cugo_target_count_R;
 extern int cugoRunMode;
 extern const bool L_reverse;
 extern const bool R_reverse;
+extern bool cugo_direction_L; //true:forward false:backward
+extern bool cugo_direction_R; //true:forward false:backward
+extern bool cugo_button_check;
 extern bool cugo_button_check;
 extern int OLD_CMD_BUTTON_VALUE; 
 extern int OLD_PWM_IN_PIN0_VALUE; 

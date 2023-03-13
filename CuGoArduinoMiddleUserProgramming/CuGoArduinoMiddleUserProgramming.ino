@@ -46,8 +46,9 @@ void loop()
   cugo_check_mode_change(cugo_motor_controllers);
   if (cugoRunMode == CUGO_RC_MODE){    
     cugo_rcmode(cugoRcTime,cugo_motor_controllers);//RC（ラジコン）操作   
-    //Serial.println("L::" + String(cugo_motor_controllers[0].getTargetRpm()) + "," + String(cugo_motor_controllers[0].getRpm()) + "," +  String(cugo_motor_controllers[0].getCount()));
-    //Serial.println("R::" + String(cugo_motor_controllers[1].getTargetRpm()) + "," + String(cugo_motor_controllers[1].getRpm()) + "," +  String(cugo_motor_controllers[1].getCount()));
+    //Serial.println("L/R::" + String(cugoRcTime[0]) + "," + String(String(cugoRcTime[2])));    
+//    Serial.println("L::" + String(cugo_motor_controllers[0].getTargetRpm()) + "," + String(cugo_motor_controllers[0].getRpm()) + "," +  String(cugo_motor_controllers[0].getCount()));
+//    Serial.println("R::" + String(cugo_motor_controllers[1].getTargetRpm()) + "," + String(cugo_motor_controllers[1].getRpm()) + "," +  String(cugo_motor_controllers[1].getCount()));
     //Serial.println(F("#   cugo_motor_direct_instructions"));//確認用
     //cugo_motor_controllers[0].servo_.writeMicroseconds(0);
     //cugo_motor_controllers[1].servo_.writeMicroseconds(0);
@@ -67,14 +68,21 @@ void loop()
       cugo_reset_button_times();   
     }
     Serial.println("##Button_time : " + String(cugo_button_press_time()));
-    cugo_move_forward_raw(0.5,10,cugo_motor_controllers);
-    cugo_keep_stop_ms(2000,cugo_motor_controllers);
-    cugo_move_forward_raw(-0.5,10,cugo_motor_controllers);    
-    cugo_keep_stop_ms(2000,cugo_motor_controllers);
-    cugo_move_forward(0.5,30,cugo_motor_controllers);
-    cugo_keep_stop_ms(2000,cugo_motor_controllers);
-    cugo_move_forward(-0.5,30,cugo_motor_controllers);
-    cugo_keep_stop_ms(2000,cugo_motor_controllers);
+    /*
+    cugo_move_forward_raw(0.5,90,cugo_motor_controllers);
+    cugo_keep_stop_ms(1000,cugo_motor_controllers);
+    cugo_move_forward_raw(-0.5,90,cugo_motor_controllers);    
+    cugo_keep_stop_ms(1000,cugo_motor_controllers);
+    */
+    cugo_move_forward(2,180,cugo_motor_controllers);
+    cugo_keep_stop_ms(1000,cugo_motor_controllers);
+    cugo_move_forward(-2.0,180,cugo_motor_controllers);
+    cugo_keep_stop_ms(1000,cugo_motor_controllers);
+    
+    cugo_turn_clockwise(90,180,cugo_motor_controllers);
+    cugo_keep_stop_ms(1000,cugo_motor_controllers);
+    cugo_turn_counterclockwise(90,180,cugo_motor_controllers);
+    cugo_keep_stop_ms(1000,cugo_motor_controllers);
     //cugo_keep_speed_ms(100,cugo_motor_controllers);
 //    cugo_keep_speed_ms(100,cugo_motor_controllers);
     //cugo__direct(1.0,1,cugo_motor_controllers); //1m 進むのに8秒進んでいる　speedは160くらい　1rpm指定?
