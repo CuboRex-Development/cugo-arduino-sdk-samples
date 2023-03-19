@@ -171,7 +171,7 @@ void cugo_move_pid(float target_rpm,bool use_pid,MotorController cugo_motor_cont
   //cugo_target_count_R = cugo_motor_controllers[MOTOR_RIGHT].getCount()+cugo_target_count_R;
   Serial.println("start l:r:" + String(cugo_motor_controllers[MOTOR_LEFT].getCount())+" ,"+ String(cugo_motor_controllers[MOTOR_RIGHT].getCount()));  
   Serial.println("target l:r:" + String(cugo_target_count_L)+" ,"+ String(cugo_target_count_R));    
-
+//check_count_achivement eぬけ
   while(!cugo_check_count_achivement(MOTOR_LEFT,cugo_motor_controllers) || !cugo_check_count_achivement(MOTOR_RIGHT,cugo_motor_controllers)){  
       if(cugo_target_count_L == 0 && cugo_target_count_R == 0)
       {
@@ -220,6 +220,7 @@ void cugo_move_pid(float target_rpm,bool use_pid,MotorController cugo_motor_cont
       cugo_motor_controllers[i].driveMotor();
     }
      delay(10);
+     
      //cugo_keep_speed_ms(10,cugo_motor_controllers);
     
     cugo_calc_odometer(cugo_motor_controllers);    
@@ -314,7 +315,7 @@ void cugo_polar_coordinates_distance_raw(float target_radius,float target_distta
   //チェック関連
 bool cugo_check_count_achivement(int motor_num_,MotorController cugo_motor_controllers[MOTOR_NUM]){
     long int target_count_ = 0;
-    bool cugo_direction_;
+    bool cugo_direction_;//前進後進方向の変数変更　cugo_forward_check_
     if(motor_num_ == MOTOR_LEFT){
       target_count_ = cugo_target_count_L;
       cugo_direction_ = cugo_direction_L;
