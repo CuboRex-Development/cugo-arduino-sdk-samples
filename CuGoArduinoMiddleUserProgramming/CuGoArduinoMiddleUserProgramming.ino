@@ -29,116 +29,32 @@ MotorController cugo_motor_controllers[MOTOR_NUM];
 //プロトタイプ宣言
 void(*resetFunc)(void) = 0;
 
-
 // 距離センサをりようするサンプルプログラム用
 #define PIN_SENSOR A3  //   距離センサ用PIN
 
-//初期設定
 void setup()
 {
   Serial.begin(115200);
   cugo_setup();
 }
 
-//loop内を繰り返し実行
 void loop()
 {
   cugo_check_mode_change(cugo_motor_controllers);
   if (cugoRunMode == CUGO_RC_MODE){    
     cugo_rcmode(cugoRcTime,cugo_motor_controllers);//RC（ラジコン）操作   
-    //Serial.println("L/R::" + String(cugoRcTime[0]) + "," + String(String(cugoRcTime[2])));    
-//    Serial.println("L::" + String(cugo_motor_controllers[0].getTargetRpm()) + "," + String(cugo_motor_controllers[0].getRpm()) + "," +  String(cugo_motor_controllers[0].getCount()));
-//    Serial.println("R::" + String(cugo_motor_controllers[1].getTargetRpm()) + "," + String(cugo_motor_controllers[1].getRpm()) + "," +  String(cugo_motor_controllers[1].getCount()));
-    //Serial.println(F("#   cugo_motor_direct_instructions"));//確認用
-    //cugo_motor_controllers[0].servo_.writeMicroseconds(0);
-    //cugo_motor_controllers[1].servo_.writeMicroseconds(0);
   }
   if (cugoRunMode == CUGO_ARDUINO_MODE){//ここから自動走行モードの記述 //★Arduinomodeではなくself-driveが良い？
   //サンプルコード記載
-    Serial.println("#自動走行モード開始");
-    Serial.println("##Ach : " + String(cugo_check_a_channel_value()) + " ,Bch : " + String(cugo_check_b_channel_value()) + " ,Cch : " + String(cugo_check_c_channel_value()));
-    //Serial.println("check");
-    Serial.println("##Button_status : " + String(cugo_check_button()));
-    //Serial.println("check");
-    Serial.println("##Button_times : " + String(cugo_check_button_times()));
-    Serial.println("##sensor : " + String(analogRead(PIN_SENSOR)));
-    
-    //Serial.println("check");
-    if(cugo_check_button_times() > 5) {
-      cugo_reset_button_times();   
-    }
-    Serial.println("##Button_time : " + String(cugo_button_press_time()));
-    /*
-    cugo_move_forward_raw(0.5,90,cugo_motor_controllers);
-    cugo_keep_stop_ms(1000,cugo_motor_controllers);
-    cugo_move_forward_raw(-0.5,90,cugo_motor_controllers);    
-    cugo_keep_stop_ms(1000,cugo_motor_controllers);
-    */
-    cugo_move_forward(2,180,cugo_motor_controllers);
-    cugo_keep_stop_ms(1000,cugo_motor_controllers);
-    cugo_move_forward(-2.0,180,cugo_motor_controllers);
-    cugo_keep_stop_ms(1000,cugo_motor_controllers);
-    
-    cugo_turn_clockwise(90,180,cugo_motor_controllers);
-    cugo_keep_stop_ms(1000,cugo_motor_controllers);
-    cugo_turn_counterclockwise(90,180,cugo_motor_controllers);
-    cugo_keep_stop_ms(1000,cugo_motor_controllers);
-    //cugo_keep_speed_ms(100,cugo_motor_controllers);
-//    cugo_keep_speed_ms(100,cugo_motor_controllers);
-    //cugo__direct(1.0,1,cugo_motor_controllers); //1m 進むのに8秒進んでいる　speedは160くらい　1rpm指定?
-    //cugo_go(-1.0,cugo_motor_controllers);
-    //cugo_wait_ms(2000,cugo_motor_controllers);
-    //cugo_go(-1.0,0.2,cugo_motor_controllers);
-    //cugo_wait_ms(2000,cugo_motor_controllers);
-    //cugo_turn_direct(90,20,cugo_motor_controllers);
-    //cugo_wait_ms(2000,cugo_motor_controllers);
-    //cugo_turn(-90,cugo_motor_controllers);
-    //cugo_wait_ms(2000,cugo_motor_controllers);
-    //cugo_turn(45,0.5,cugo_motor_controllers);
-    
-    
-    cugo_stop(cugo_motor_controllers);
-  /*
-  cugo_wait_ms(100,cugo_motor_controllers);
-  Serial.println("wait done!1");
-  cugo_go(1.0,cugo_motor_controllers);
-  cugo_wait_ms(100,cugo_motor_controllers);
-  Serial.println("wait done!2");
-  cugo_go(-1.0,50,cugo_motor_controllers);
-  cugo_wait_ms(100,cugo_motor_controllers);
-  Serial.println("wait done!3");
-  cugo_go_direct(1.0,150,cugo_motor_controllers);
-  cugo_wait_ms(100,cugo_motor_controllers);
-  Serial.println("wait done!4");
-  cugo_turn(90,cugo_motor_controllers);
-  cugo_wait_ms(100,cugo_motor_controllers);
-  Serial.println("wait done!5");
-  cugo_turn(-90,20,cugo_motor_controllers);//単位はm,rpm
-  cugo_wait_ms(100,cugo_motor_controllers);
-  Serial.println("wait done!6");
-  cugo_turn_direct(45,30,cugo_motor_controllers);//単位はm,rpm
-  cugo_wait_ms(100,cugo_motor_controllers);
-  Serial.println("wait done!7");
-  Serial.println("各プロポ入力値");
-  Serial.print(String(cugo_check_a_channel_value()));   
-  Serial.print(String(cugo_check_b_channel_value()));   
-  Serial.println(String(cugo_check_c_channel_value())); 
-  Serial.println("各ボタン状態");    
-  Serial.print(String(cugo_check_button())); //現状の押されているか
-  Serial.print(String(cugo_check_button_times())); //現状の押された回数
-  Serial.println(String(cugo_button_press_time())); //ボタンの押されている時間
-  Serial.println("距離センサ");    
-  Serial.println(analogRead(PIN_SENSOR));
-    if(cugo_check_button_times() > 2){
-    cugo_reset_button_times(); //現状の押された回数  
-    }
-    if(analogRead(PIN_SENSOR) > 0.3){
-    Serial.println("flag!!");
-    cugo_stop(cugo_motor_controllers);
-    }
-  */
-      Serial.println("自動走行モード終了"); 
-      cugoRunMode = CUGO_RC_MODE; //自動走行モードをループしたい場合はCUGO_ARDUINO_MODEに変更
+  Serial.println("自動走行モード開始");
+  //試験プログラムパターン①
+  unsigned long int cugo_test_start = micros();  
+  //試験用関数記載
+  //cugo_move_forward(1.0,-40,cugo_motor_controllers);
+  cugo_turn_clockwise(-90,cugo_motor_controllers);       
+  Serial.println("処理時間(micros)" + String(micros()-cugo_test_start)); 
+  Serial.println("自動走行モード終了"); 
+  cugoRunMode = CUGO_RC_MODE; //自動走行モードをループしたい場合はCUGO_ARDUINO_MODEに変更
   }
 }
 
@@ -167,12 +83,12 @@ ISR(PCINT2_vect)
     { // 立下り時の処理
       PIN_DOWN(1);//たおした瞬間にリセットになっているかを確認
       if (CUGO_ARDUINO_MODE_IN < time[1])
-      { //KOPPROのBchを右に倒すとArduinoリセット
-      resetFunc();
+      { //KOPPROのBchを左に倒すとモードフラグの変更
+        cugoRunMode = CUGO_ARDUINO_MODE;
       } 
       if (CUGO_ARDUINO_MODE_OUT > time[1])
-      { //KOPPROのBchを左に倒すとモードフラグの変更
-            cugoRunMode = CUGO_ARDUINO_MODE;
+      { //KOPPROのBchを左に倒すとArduinoリセット
+        resetFunc();
       }       
     }
     OLD_PWM_IN_PIN1_VALUE = OLD_PWM_IN_PIN1_VALUE ? LOW : HIGH;

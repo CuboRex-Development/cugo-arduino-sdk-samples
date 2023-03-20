@@ -166,8 +166,8 @@ extern volatile unsigned long time[PWM_IN_MAX];
   void cugo_turn_counterclockwise(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
   void cugo_turn_counterclockwise_raw(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm  
   //極座標での移動命令
-  void cugo_polar_curve_theta_raw(float target_radius,float target_theta,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void cugo_polar_curve_distance_raw(float target_radius,float target_disttance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_curve_theta_raw(float target_radius,float target_theta,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_curve_distance_raw(float target_radius,float target_disttance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);
 
   //カウント数のチェック
   bool cugo_check_count_achivement(int motor_num_,MotorController cugo_motor_controllers[MOTOR_NUM]);

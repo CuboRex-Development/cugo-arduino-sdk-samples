@@ -79,7 +79,7 @@ void cugo_check_mode_change(MotorController cugo_motor_controllers[MOTOR_NUM])
     cugo_old_runmode = CUGO_ARDUINO_MODE;
     reset_pid_gain(cugo_motor_controllers);
     cugo_motor_direct_instructions(1500, 1500,cugo_motor_controllers); //直接停止命令を出す
-    delay(100); // すぐに別の値でモータを回そうとするとガクガクするので落ち着くまで待つ。10ms程度でも問題なし。    
+    cugo_wait(100); // すぐに別の値でモータを回そうとするとガクガクするので落ち着くまで待つ。10ms程度でも問題なし。    
   }
   if(cugoRunMode == CUGO_RC_MODE && cugo_old_runmode == CUGO_ARDUINO_MODE)
   {
@@ -88,7 +88,7 @@ void cugo_check_mode_change(MotorController cugo_motor_controllers[MOTOR_NUM])
     cugo_old_runmode = CUGO_RC_MODE;            
     reset_pid_gain(cugo_motor_controllers);
     cugo_motor_direct_instructions(1500, 1500,cugo_motor_controllers); //直接停止命令を出す
-    delay(100); // すぐに別の値でモータを回そうとするとガクガクするので落ち着くまで待つ。10ms程度でも問題なし。    
+    cugo_wait(100); // すぐに別の値でモータを回そうとするとガクガクするので落ち着くまで待つ。10ms程度でも問題なし。    
   }                       
 }
 void cugo_keep_speed_ms(unsigned long int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM]){ 
@@ -137,6 +137,10 @@ void cugo_move_pid(float target_rpm,bool use_pid,MotorController cugo_motor_cont
   float r_count_p =0 ;  // P制御値
   float r_count_i =0 ;  // I制御値
   float r_count_d =0 ;  // D制御値
+
+  if(target_rpm < 0){
+  target_rpm = 0;
+  }
 
     if(cugo_target_count_L >= 0){
       cugo_direction_L = true;
@@ -227,7 +231,7 @@ void cugo_move_pid(float target_rpm,bool use_pid,MotorController cugo_motor_cont
     for (int i = 0; i < MOTOR_NUM; i++){ 
       cugo_motor_controllers[i].driveMotor();
     }
-     delay(10);
+     cugo_wait(10);
      
      //cugo_keep_speed_ms(10,cugo_motor_controllers);
     
@@ -281,22 +285,53 @@ void cugo_turn_counterclockwise_raw(float target_degree,float target_rpm,MotorCo
   }
   //極座標での移動命令
 void cugo_curve_theta_raw(float target_radius,float target_theta,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]){
-  cugo_target_count_L = (target_radius-tread/2)*target_theta*conversion_distance_to_count;
-  cugo_target_count_R = (target_radius+tread/2)*target_theta*conversion_distance_to_count;      
+  reset_pid_gain(cugo_motor_controllers);          
+  cugo_target_count_L = (target_radius-tread/2)*(target_theta*PI/180)*conversion_distance_to_count;
+  cugo_target_count_R = (target_radius+tread/2)*(target_theta*PI/180)*conversion_distance_to_count;      
   cugo_motor_controllers[MOTOR_LEFT].setTargetRpm(target_rpm*((target_radius-tread/2)/target_radius));
   cugo_motor_controllers[MOTOR_RIGHT].setTargetRpm(target_rpm*((target_radius+tread/2)/target_radius));
-  while(cugo_check_count_achivement(MOTOR_LEFT,cugo_motor_controllers) && cugo_check_count_achivement(MOTOR_RIGHT,cugo_motor_controllers)){  
+  Serial.println("target_count l:r:" + String(cugo_target_count_L)+" ,"+ String(cugo_target_count_R));  
+  Serial.println("rpm l:r:" + String(cugo_motor_controllers[MOTOR_LEFT].getTargetRpm())+" ,"+ String(cugo_motor_controllers[MOTOR_RIGHT].getTargetRpm()));  
+
+    if(cugo_target_count_L >= 0){
+      cugo_direction_L = true;
+    }else{
+      cugo_direction_L = false;
+    }
+    if(cugo_target_count_R >= 0){
+            cugo_direction_R = true;
+    }else{
+            cugo_direction_R = false;
+    }
+
+  Serial.println("===========");  
+  Serial.println("start l:r:" + String(cugo_motor_controllers[MOTOR_LEFT].getCount())+" ,"+ String(cugo_motor_controllers[MOTOR_RIGHT].getCount()));  
+  Serial.println("target l:r:" + String(cugo_target_count_L)+" ,"+ String(cugo_target_count_R));    
+  while(!cugo_check_count_achivement(MOTOR_LEFT,cugo_motor_controllers) || !cugo_check_count_achivement(MOTOR_RIGHT,cugo_motor_controllers)){  
       if(cugo_target_count_L == 0 && cugo_target_count_R == 0)
       {
         //停止しているだけの時
         cugo_motor_controllers[MOTOR_LEFT].setTargetRpm(0);
         cugo_motor_controllers[MOTOR_RIGHT].setTargetRpm(0);
+      } else{
+
       }
-      for (int i = 0; i < MOTOR_NUM; i++){ 
-        cugo_motor_controllers[i].driveMotor();
-      }
-      cugo_calc_odometer(cugo_motor_controllers);    
-    }  
+    for (int i = 0; i < MOTOR_NUM; i++){ 
+      cugo_motor_controllers[i].driveMotor();
+    }
+     //delay(10);
+     cugo_wait(10);
+     
+     //cugo_keep_speed_ms(10,cugo_motor_controllers);
+    
+    cugo_calc_odometer(cugo_motor_controllers);    
+  }
+  Serial.println("result l:r:" + String(cugo_motor_controllers[MOTOR_LEFT].getCount())+" ,"+ String(cugo_motor_controllers[MOTOR_RIGHT].getCount()));
+  //Serial.println("距離："+String(conversion_count_to_distance*(cugo_motor_controllers[0].getCount())));
+  cugo_stop(cugo_motor_controllers); 
+  
+  reset_pid_gain(cugo_motor_controllers);                 
+  
   cugo_stop(cugo_motor_controllers); 
   reset_pid_gain(cugo_motor_controllers);          
   }
@@ -337,12 +372,12 @@ bool cugo_check_count_achivement(int motor_num_,MotorController cugo_motor_contr
     // 目標達成チェック
     //Serial.print("count::"String(cugo_target_count_L));
     if(cugo_direction_){
-      if (target_count_<cugo_motor_controllers[motor_num_].getCount()){
+      if (target_count_<=cugo_motor_controllers[motor_num_].getCount()){
         cugo_motor_controllers[motor_num_].setTargetRpm(0);
         return true;
       } 
     }else{
-      if (target_count_>cugo_motor_controllers[motor_num_].getCount()){
+      if (target_count_>=cugo_motor_controllers[motor_num_].getCount()){
         cugo_motor_controllers[motor_num_].setTargetRpm(0);
         return true;
       } 
@@ -451,7 +486,7 @@ void init_KOPROPO(int OLD_PWM_IN_PIN0_VALUE,int OLD_PWM_IN_PIN1_VALUE,int OLD_PW
   PCICR  |= B00000110;  // PCIE1,2を有効
 
   pinMode(LED_BUILTIN, OUTPUT); // Arduino/RC MODEの表示
-  delay(100);
+       cugo_wait(100);
 }
 void calc_necessary_rotate(float degree,MotorController cugo_motor_controllers[MOTOR_NUM]) 
 {
@@ -513,7 +548,7 @@ void cugo_stop(MotorController cugo_motor_controllers[MOTOR_NUM])
   cugo_motor_controllers[0].setTargetRpm(0.0);
   cugo_motor_controllers[1].setTargetRpm(0.0);
   cugo_motor_direct_instructions(1500, 1500,cugo_motor_controllers);
-  delay(100); // すぐに別の値でモータを回そうとするとガクガクするので落ち着くまで待つ。10ms程度でも問題なし。    
+  cugo_wait(100); // すぐに別の値でモータを回そうとするとガクガクするので落ち着くまで待つ。10ms程度でも問題なし。    
   
 }
 void reset_pid_gain(MotorController cugo_motor_controllers[MOTOR_NUM])
@@ -526,7 +561,9 @@ void reset_pid_gain(MotorController cugo_motor_controllers[MOTOR_NUM])
 }
 void init_display()
 {
-  delay(30);
+  //delay(30);
+  cugo_wait(30);
+
 /*  
   Serial.println("");
   Serial.println("");  
