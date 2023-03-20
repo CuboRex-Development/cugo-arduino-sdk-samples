@@ -121,6 +121,14 @@ void cugo_keep_stop_ms(unsigned long int wait_ms,MotorController cugo_motor_cont
   cugo_stop(cugo_motor_controllers);
 }
 
+void cugo_wait(unsigned long int wait_ms){
+  //wait値の範囲は0から4,294,967,295micors 最大71.58278825分//★これでよいか？//追加時間分
+  unsigned long long int cugo_target_wait_time = micros()+ wait_ms*1000;
+  while(cugo_target_wait_time > micros()){
+  }
+}
+
+
 void cugo_move_pid(float target_rpm,bool use_pid,MotorController cugo_motor_controllers[MOTOR_NUM]){
   reset_pid_gain(cugo_motor_controllers);          
   float l_count_p =0 ;  // P制御値
@@ -272,7 +280,7 @@ void cugo_turn_counterclockwise_raw(float target_degree,float target_rpm,MotorCo
   cugo_move_pid(target_rpm,false,cugo_motor_controllers);  
   }
   //極座標での移動命令
-void cugo_polar_coordinates_theta_raw(float target_radius,float target_theta,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]){
+void cugo_curve_theta_raw(float target_radius,float target_theta,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]){
   cugo_target_count_L = (target_radius-tread/2)*target_theta*conversion_distance_to_count;
   cugo_target_count_R = (target_radius+tread/2)*target_theta*conversion_distance_to_count;      
   cugo_motor_controllers[MOTOR_LEFT].setTargetRpm(target_rpm*((target_radius-tread/2)/target_radius));
@@ -292,7 +300,7 @@ void cugo_polar_coordinates_theta_raw(float target_radius,float target_theta,flo
   cugo_stop(cugo_motor_controllers); 
   reset_pid_gain(cugo_motor_controllers);          
   }
-void cugo_polar_coordinates_distance_raw(float target_radius,float target_disttance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]){
+void cugo_curve_distance_raw(float target_radius,float target_disttance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]){
   cugo_target_count_L = target_disttance*((target_radius-tread/2)/target_radius)*conversion_distance_to_count;
   cugo_target_count_R = target_disttance*((target_radius+tread/2)/target_radius)*conversion_distance_to_count;      
   cugo_motor_controllers[MOTOR_LEFT].setTargetRpm(target_rpm*((target_radius-tread/2)/target_radius));
@@ -342,6 +350,27 @@ bool cugo_check_count_achivement(int motor_num_,MotorController cugo_motor_contr
 
     return false;
 }
+
+int cugo_check_propo_channel_value(int channel_number){
+  noInterrupts();      //割り込み停止
+  cugoRcTime[0] = time[0];
+  cugoRcTime[1] = time[1];
+  cugoRcTime[2] = time[2];  
+  interrupts();     //割り込み開始  
+
+  if(channel_number == cugo_propo_Ach){
+  return cugoRcTime[0];    
+  }else if(channel_number == cugo_propo_Bch){
+  return cugoRcTime[1];    
+  }else if(channel_number == cugo_propo_Cch){
+  return cugoRcTime[2];  
+  }else{
+  return 0;    
+  }
+  return 0;
+
+}
+
 int cugo_check_a_channel_value(){
   noInterrupts();      //割り込み停止
   cugoRcTime[0] = time[0];
