@@ -148,6 +148,7 @@ extern volatile unsigned long time[PWM_IN_MAX];
   void cugo_keep_speed_ms(unsigned long int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM]);
   void cugo_keep_stop_ms(unsigned long int wait_ms,MotorController cugo_motor_controllers[MOTOR_NUM]);
   void cugo_wait(unsigned long int wait_ms);
+  void cugo_long_wait(unsigned long int wait_seconds);
   void cugo_motor_direct_instructions(int left, int right,MotorController cugo_motor_controllers[MOTOR_NUM]);
   void cugo_rcmode(volatile unsigned long cugoRcTime[PWM_IN_MAX],MotorController cugo_motor_controllers[MOTOR_NUM]);
   void cugo_stop(MotorController cugo_motor_controllers[MOTOR_NUM]);
@@ -167,10 +168,10 @@ extern volatile unsigned long time[PWM_IN_MAX];
   void cugo_turn_counterclockwise_raw(float target_degree,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm  
   //極座標での移動命令
   void cugo_curve_theta_raw(float target_radius,float target_theta,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);
-  void cugo_curve_distance_raw(float target_radius,float target_disttance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  void cugo_curve_distance_raw(float target_radius,float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]);
 
   //カウント数のチェック
-  bool cugo_check_count_achivement(int motor_num_,MotorController cugo_motor_controllers[MOTOR_NUM]);
+  bool cugo_check_count_achievement(int motor_num_,MotorController cugo_motor_controllers[MOTOR_NUM]);
   void cugo_move_pid(float target_rpm,bool use_pid,MotorController cugo_motor_controllers[MOTOR_NUM]);//単位はm,rpm
   //モーター制御
   int cugo_check_propo_channel_value(int channel_number);
