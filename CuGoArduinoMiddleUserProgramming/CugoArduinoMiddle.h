@@ -114,6 +114,9 @@ extern long int cugo_count_prev_R;
 
 extern long int cugo_target_count_L;
 extern long int cugo_target_count_R;
+extern long int cugo_odometer_count_theta;
+extern long int cugo_odometer_count_x;
+extern long int cugo_odometer_count_y;
 extern int cugoRunMode;
 extern const bool L_reverse;
 extern const bool R_reverse;

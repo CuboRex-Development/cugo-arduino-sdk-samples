@@ -46,34 +46,37 @@ void loop()
   }
   if (cugoRunMode == CUGO_ARDUINO_MODE){//ここから自動走行モードの記述 //★Arduinomodeではなくself-driveが良い？
   //サンプルコード記載
+  
   //試験プログラムパターン①
   
   Serial.println("自動走行モード開始");
   unsigned long int cugo_test_start = micros();  
   //試験用関数記載
-  cugo_curve_theta_raw(0,1800,90,cugo_motor_controllers);
-  //cugo_move_forward(-100.0,180,cugo_motor_controllers);
-  //cugo_turn_clockwise(5400,180,cugo_motor_controllers);       
+  cugo_wait(4500000);
+  //cugo_curve_theta_raw(-1.0,90,90,cugo_motor_controllers);
+  //cugo_curve_distance_raw(100,50,90,cugo_motor_controllers);
+  //cugo_move_forward(300.0,cugo_motor_controllers);
+  //cugo_turn_clockwise(-90,cugo_motor_controllers);       
   ///cugo_turn_counterclockwise(5400,180,cugo_motor_controllers);       
   //Serial.println("Ach::" + String(cugo_check_propo_channel_value(-200))+"  Bch::" + String(cugo_check_propo_channel_value(1))+ "  Cch::" + String(cugo_check_propo_channel_value(2))); 
   Serial.println("処理時間(micros)" + String(micros()-cugo_test_start)); 
   //cugo_wait(1000);
   Serial.println("自動走行モード終了"); 
   cugoRunMode = CUGO_RC_MODE; //自動走行モードをループしたい場合はCUGO_ARDUINO_MODEに変更
-   
+  
    
   //試験プログラムパターン②
   /*
   unsigned long int cugo_test_start = micros();  
   //試験用関数記載
-  Serial.println("Ach::" + String(cugo_check_propo_channel_value(-200))+"  Bch::" + String(cugo_check_propo_channel_value(1))+ "  Cch::" + String(cugo_check_propo_channel_value(2))); 
+  Serial.println("Ach::" + String(cugo_check_propo_channel_value(0))+"  Bch::" + String(cugo_check_propo_channel_value(1))+ "  Cch::" + String(cugo_check_propo_channel_value(2))); 
 
   Serial.println("処理時間(micros)" + String(micros()-cugo_test_start)); 
-  cugo_wait(1000);
+  cugo_wait(100);
   cugoRunMode = CUGO_ARDUINO_MODE; //自動走行モードをループしたい場合はCUGO_ARDUINO_MODEに変更
+  */ 
    
-   */
-   /*
+  /* 
   //試験プログラムパターン③
   Serial.println("自動走行モード開始");  
   unsigned long int cugo_test_start = micros();  
@@ -83,9 +86,11 @@ void loop()
   Serial.println("ボタンの押された回数" + String(cugo_check_button_times())); 
   Serial.println("処理時間(micros)" + String(micros()-cugo_test_start)); 
   cugo_wait(1000);
-  cugoRunMode = CUGO_RC_MODE; //自動走行モードをループしたい場合はCUGO_ARDUINO_MODEに変更
+
+  */
+  cugoRunMode = CUGO_RC_MODE; //1周で止めたい場合はCUGO_RC_MODE、自動走行モードをループしたい場合はCUGO_ARDUINO_MODEに変更
   Serial.println("自動走行モード終了"); 
-   */
+  
   }
 }
 
@@ -119,6 +124,8 @@ ISR(PCINT2_vect)
       } 
       if (CUGO_ARDUINO_MODE_OUT > time[1])
       { //KOPPROのBchを左に倒すとArduinoリセット
+        //★ここに来た時止めて異常値判定whileで止めるmillis()で取る
+        //エンコーダー初期化で試す価値あり
         resetFunc();
       }       
     }

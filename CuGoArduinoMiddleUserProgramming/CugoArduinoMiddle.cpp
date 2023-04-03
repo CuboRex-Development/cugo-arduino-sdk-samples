@@ -14,6 +14,10 @@ int cugo_button_count =0;
 float cugo_odometer = 0.0;
 long int cugo_count_prev_L = 0;
 long int cugo_count_prev_R = 0;
+long int cugo_odometer_count_theta =0;
+long int cugo_odometer_count_x =0 ;
+long int cugo_odometer_count_y = 0 ;
+
 bool cugo_direction_L; //true:forward false:backward
 bool cugo_direction_R; //true:forward false:backward
 
@@ -145,11 +149,15 @@ void cugo_move_pid(float target_rpm,bool use_pid,MotorController cugo_motor_cont
   float r_count_p =0 ;  // P制御値
   float r_count_i =0 ;  // I制御値
   float r_count_d =0 ;  // D制御値
+  
+  unsigned long long int calc_odometer_time = micros();
 
-  if(target_rpm < 0){
-  target_rpm = 0;
-  }
-
+  
+  
+  if(target_rpm <= 0){
+    Serial.println("##WARNING::目標速度が0以下のため進みません##");          
+  }else{
+    
     if(cugo_target_count_L >= 0){
       cugo_direction_L = true;
     }else{
@@ -191,6 +199,11 @@ void cugo_move_pid(float target_rpm,bool use_pid,MotorController cugo_motor_cont
   //cugo_target_count_R = cugo_motor_controllers[MOTOR_RIGHT].getCount()+cugo_target_count_R;
   Serial.println("start l:r:" + String(cugo_motor_controllers[MOTOR_LEFT].getCount())+" ,"+ String(cugo_motor_controllers[MOTOR_RIGHT].getCount()));  
   Serial.println("target l:r:" + String(cugo_target_count_L)+" ,"+ String(cugo_target_count_R));    
+
+  if(abs(cugo_motor_controllers[MOTOR_LEFT].getTargetRpm())>180 || abs(cugo_motor_controllers[MOTOR_RIGHT].getTargetRpm()) > 180){
+  Serial.println("##WARNING::目標速度が上限を超えているため正確な軌道を進まない可能性があります。##");          
+  }
+  
 //check_count_achievement eぬけ
   while(!cugo_check_count_achievement(MOTOR_LEFT,cugo_motor_controllers) || !cugo_check_count_achievement(MOTOR_RIGHT,cugo_motor_controllers)){  
       if(cugo_target_count_L == 0 && cugo_target_count_R == 0)
@@ -240,13 +253,16 @@ void cugo_move_pid(float target_rpm,bool use_pid,MotorController cugo_motor_cont
       cugo_motor_controllers[i].driveMotor();
     }
      cugo_wait(10);
-     
+    //while(cugo_target_wait_time > micros()){
+    
+   //}     
      //cugo_keep_speed_ms(10,cugo_motor_controllers);
     
     cugo_calc_odometer(cugo_motor_controllers);    
   }
   Serial.println("result l:r:" + String(cugo_motor_controllers[MOTOR_LEFT].getCount())+" ,"+ String(cugo_motor_controllers[MOTOR_RIGHT].getCount()));
   //Serial.println("距離："+String(conversion_count_to_distance*(cugo_motor_controllers[0].getCount())));
+  }
   cugo_stop(cugo_motor_controllers); 
   
   reset_pid_gain(cugo_motor_controllers);                 
@@ -297,9 +313,12 @@ void cugo_curve_theta_raw(float target_radius,float target_theta,float target_rp
   cugo_target_count_L = (target_radius-tread/2)*(target_theta*PI/180)*conversion_distance_to_count;
   cugo_target_count_R = (target_radius+tread/2)*(target_theta*PI/180)*conversion_distance_to_count;      
 
+
+
   if(target_rpm <= 0){
-    target_rpm = 0;
-  }  
+    Serial.println("##WARNING::目標速度が0以下のため進みません##");          
+  }else{
+  
   
   
   if(target_radius<0){
@@ -374,24 +393,29 @@ void cugo_curve_theta_raw(float target_radius,float target_theta,float target_rp
   cugo_stop(cugo_motor_controllers); 
   
   reset_pid_gain(cugo_motor_controllers);                 
-  
+  }
   cugo_stop(cugo_motor_controllers); 
   reset_pid_gain(cugo_motor_controllers);          
   }
 void cugo_curve_distance_raw(float target_radius,float target_distance,float target_rpm,MotorController cugo_motor_controllers[MOTOR_NUM]){
-  reset_pid_gain(cugo_motor_controllers);          
-  cugo_target_count_L = target_distance*((target_radius-tread/2)/target_radius)*conversion_distance_to_count;
-  cugo_target_count_R = target_distance*((target_radius+tread/2)/target_radius)*conversion_distance_to_count;
+  reset_pid_gain(cugo_motor_controllers);
+
+  if(target_radius == 0){          
+    Serial.println("##WARNING::軌道半径が0のため進みません##");
+  }else{
+    cugo_target_count_L = target_distance*((target_radius-tread/2)/target_radius)*conversion_distance_to_count;
+    cugo_target_count_R = target_distance*((target_radius+tread/2)/target_radius)*conversion_distance_to_count;
         
   if(target_rpm <= 0){
-    target_rpm = 0;
-  }  
+    Serial.println("##WARNING::目標速度が0以下のため進みません##");          
+  }else{
+    
   
   
-  if(target_radius<0){
-  cugo_target_count_L = -cugo_target_count_L;
-  cugo_target_count_R = -cugo_target_count_R; 
-  }
+  //if(target_radius<0){
+  //cugo_target_count_L = -cugo_target_count_L;
+  //cugo_target_count_R = -cugo_target_count_R; 
+  //}
   if(target_distance>0){
     if(target_radius != 0){
       cugo_motor_controllers[MOTOR_LEFT].setTargetRpm(target_rpm*((target_radius-tread/2)/target_radius));
@@ -462,7 +486,8 @@ void cugo_curve_distance_raw(float target_radius,float target_distance,float tar
   cugo_stop(cugo_motor_controllers); 
   
   reset_pid_gain(cugo_motor_controllers);                 
-  
+  }
+  }
   cugo_stop(cugo_motor_controllers); 
   reset_pid_gain(cugo_motor_controllers);
   }
@@ -559,7 +584,9 @@ long int cugo_button_press_time(){
 
 
 }
-float cugo_check_odometer(){
+float cugo_check_odometer(int odometer_number){
+  //odometer_number 0:x,1:y,2:theta
+  
   return cugo_odometer;  
 }
 void cugo_calc_odometer(MotorController cugo_motor_controllers[MOTOR_NUM]){

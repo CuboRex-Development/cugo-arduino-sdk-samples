@@ -1,9 +1,0 @@
-### モード:CUGO_ARDUINO_MODE ###
-自動走行モード開始
-===========
-start l:r:0 ,0
-target l:r:0 ,0
-result l:r:0 ,0
-処理時間(micros)102132
-自動走行モード終了
-###   モード:CUGO_RC_MODE    ###
