@@ -722,7 +722,7 @@ void init_display()
   Serial.println("");  
 */
   Serial.println("###############################");  
-  Serial.println("###   CugoAruduinoKit起動  　###");
+  Serial.println("###   CugoAruduinoKitStart  ###");
   Serial.println("###############################");  
 
 }

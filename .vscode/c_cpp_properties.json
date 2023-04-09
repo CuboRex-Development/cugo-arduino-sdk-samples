@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/Users/tamia/Documents/ArduinoData",
+                "C:/Users/tamia/OneDrive/02 副業/03 CuboRex/middle",
+                "C:\\Users\\tamia\\Documents\\Arduino"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ]
+        }
+    ],
+    "version": 4
+}
