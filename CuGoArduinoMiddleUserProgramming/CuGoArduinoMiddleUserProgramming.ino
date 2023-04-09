@@ -41,8 +41,10 @@ void setup()
 void loop()
 {
   cugo_check_mode_change(cugo_motor_controllers);
-  if (cugoRunMode == CUGO_RC_MODE){    
+  if (cugoRunMode == CUGO_RC_MODE){
+    if((cugoRcTime[0] < CUGO_PROPO_MAX && cugoRcTime[0] > CUGO_PROPO_MIN) && (cugoRcTime[2] < CUGO_PROPO_MAX && cugoRcTime[2] > CUGO_PROPO_MIN) ){    
     cugo_rcmode(cugoRcTime,cugo_motor_controllers);//RC（ラジコン）操作   
+    }
   }
   if (cugoRunMode == CUGO_ARDUINO_MODE){//ここから自動走行モードの記述 //★Arduinomodeではなくself-driveが良い？
   //サンプルコード記載
@@ -52,17 +54,19 @@ void loop()
   Serial.println("自動走行モード開始");
   unsigned long int cugo_test_start = micros();  
   //試験用関数記載
-  cugo_wait(4500000);
+  //cugo_wait(4500000);
+  cugo_wait(4200000);
   //cugo_curve_theta_raw(-1.0,90,90,cugo_motor_controllers);
   //cugo_curve_distance_raw(100,50,90,cugo_motor_controllers);
   //cugo_move_forward(300.0,cugo_motor_controllers);
   //cugo_turn_clockwise(-90,cugo_motor_controllers);       
   ///cugo_turn_counterclockwise(5400,180,cugo_motor_controllers);       
-  //Serial.println("Ach::" + String(cugo_check_propo_channel_value(-200))+"  Bch::" + String(cugo_check_propo_channel_value(1))+ "  Cch::" + String(cugo_check_propo_channel_value(2))); 
-  Serial.println("処理時間(micros)" + String(micros()-cugo_test_start)); 
+  Serial.print("Ach::" + String(cugo_check_propo_channel_value(0))+"  Bch::" + String(cugo_check_propo_channel_value(1))+ "  Cch::" + String(cugo_check_propo_channel_value(2))); 
+  //Serial.println("処理時間(micros)" + String(micros()-cugo_test_start)); 
+  Serial.println("  処理時間(micros)" + String(micros()));   
   //cugo_wait(1000);
   Serial.println("自動走行モード終了"); 
-  cugoRunMode = CUGO_RC_MODE; //自動走行モードをループしたい場合はCUGO_ARDUINO_MODEに変更
+  cugoRunMode = CUGO_ARDUINO_MODE; //自動走行モードをループしたい場合はCUGO_ARDUINO_MODEに変更
   
    
   //試験プログラムパターン②
@@ -88,8 +92,8 @@ void loop()
   cugo_wait(1000);
 
   */
-  cugoRunMode = CUGO_RC_MODE; //1周で止めたい場合はCUGO_RC_MODE、自動走行モードをループしたい場合はCUGO_ARDUINO_MODEに変更
-  Serial.println("自動走行モード終了"); 
+  //cugoRunMode = CUGO_RC_MODE; //1周で止めたい場合はCUGO_RC_MODE、自動走行モードをループしたい場合はCUGO_ARDUINO_MODEに変更
+  //Serial.println("自動走行モード終了"); 
   
   }
 }
@@ -118,13 +122,15 @@ ISR(PCINT2_vect)
     else
     { // 立下り時の処理
       PIN_DOWN(1);//たおした瞬間にリセットになっているかを確認
-      if (CUGO_ARDUINO_MODE_IN < time[1])
+      if (CUGO_ARDUINO_MODE_IN < time[1] && CUGO_PROPO_MAX > time[1])
       { //KOPPROのBchを左に倒すとモードフラグの変更
         cugoRunMode = CUGO_ARDUINO_MODE;
       } 
-      if (CUGO_ARDUINO_MODE_OUT > time[1])
+      if (CUGO_ARDUINO_MODE_OUT > time[1] && CUGO_PROPO_MIN < time[1])
       { //KOPPROのBchを左に倒すとArduinoリセット
         //★ここに来た時止めて異常値判定whileで止めるmillis()で取る
+        Serial.println(String(cugo_check_propo_channel_value(1)));
+        delay(10); 
         //エンコーダー初期化で試す価値あり
         resetFunc();
       }       
