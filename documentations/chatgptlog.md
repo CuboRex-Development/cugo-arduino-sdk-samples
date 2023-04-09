@@ -55,14 +55,14 @@ redefinition of 'MotorController cugo_motor_controllers [2]'
 
 Shimarisu Ashime
 CugoArduinoMiddle.cpp:33:50: error: conflicting declaration 'MotorController cugo_motor_controllers [0]'
- MotorController cugo_motor_controllers[MOTOR_LEFT] = MotorController(PIN_ENCODER_L_A, PIN_ENCODER_L_B, PIN_MOTOR_L, 2048, 600, 100, L_LPF, L_KP, L_KI, L_KD, L_reverse);
+ MotorController cugo_motor_controllers[MOTOR_LEFT] = MotorController(PIN_ENCODER_L_A, PIN_ENCODER_L_B, PIN_MOTOR_L, 2048, 600, 100, L_LPF, L_KP, L_KI, L_KD, CUGO_L_reverse);
                                                   ^
 In file included from C:\Users\tamia\Desktop\cuborex\cugo-arduino-middleuser-programming\CuGoArduinoMiddleUserProgramming\CugoArduinoMiddle.cpp:1:0:
 C:\Users\tamia\Desktop\cuborex\cugo-arduino-middleuser-programming\CuGoArduinoMiddleUserProgramming\CugoArduinoMiddle.h:111:24: note: previous declaration as 'MotorController cugo_motor_controllers [2]'
  extern MotorController cugo_motor_controllers[MOTOR_NUM];
                         ^~~~~~~~~~~~~~~~~~~~~~
 CugoArduinoMiddle.cpp:34:51: error: conflicting declaration 'MotorController cugo_motor_controllers [1]'
- MotorController cugo_motor_controllers[MOTOR_RIGHT] = MotorController(PIN_ENCODER_R_A, PIN_ENCODER_R_B, PIN_MOTOR_R, 2048, 600, 100, R_LPF, R_KP, R_KI, R_KD, R_reverse);
+ MotorController cugo_motor_controllers[MOTOR_RIGHT] = MotorController(PIN_ENCODER_R_A, PIN_ENCODER_R_B, PIN_MOTOR_R, 2048, 600, 100, R_LPF, R_KP, R_KI, R_KD, CUGO_R_reverse);
                                                    ^
 In file included from C:\Users\tamia\Desktop\cuborex\cugo-arduino-middleuser-programming\CuGoArduinoMiddleUserProgramming\CugoArduinoMiddle.cpp:1:0:
 C:\Users\tamia\Desktop\cuborex\cugo-arduino-middleuser-programming\CuGoArduinoMiddleUserProgramming\CugoArduinoMiddle.h:111:24: note: previous declaration as 'MotorController cugo_motor_controllers [2]'
@@ -79,8 +79,8 @@ Copy code
 #include "CugoArduinoMiddle.h"
 
 MotorController cugo_motor_controllers[MOTOR_NUM] = {
-  MotorController(PIN_ENCODER_L_A, PIN_ENCODER_L_B, PIN_MOTOR_L, 2048, 600, 100, L_LPF, L_KP, L_KI, L_KD, L_reverse),
-  MotorController(PIN_ENCODER_R_A, PIN_ENCODER_R_B, PIN_MOTOR_R, 2048, 600, 100, R_LPF, R_KP, R_KI, R_KD, R_reverse)
+  MotorController(PIN_ENCODER_L_A, PIN_ENCODER_L_B, PIN_MOTOR_L, 2048, 600, 100, L_LPF, L_KP, L_KI, L_KD, CUGO_L_reverse),
+  MotorController(PIN_ENCODER_R_A, PIN_ENCODER_R_B, PIN_MOTOR_R, 2048, 600, 100, R_LPF, R_KP, R_KI, R_KD, CUGO_R_reverse)
 };
 このコードでは、配列の要素数がMOTOR_NUMに設定されていることに対応して、2つの要素を持つ配列として宣言されています。また、各要素にはMotorControllerのコンストラクタを使用して初期化されています。
 
