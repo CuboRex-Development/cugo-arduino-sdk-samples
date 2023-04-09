@@ -169,9 +169,9 @@ void cugo_setup()
 { //初期化実行
   cugo_init();
   // LEFTインスタンス有効化
-  cugo_motor_controllers[MOTOR_LEFT] = MotorController(PIN_ENCODER_L_A, PIN_ENCODER_L_B, PIN_MOTOR_L, 2048, 600, 100, L_LPF, L_KP, L_KI, L_KD, L_reverse);
+  cugo_motor_controllers[MOTOR_LEFT] = MotorController(PIN_ENCODER_L_A, PIN_ENCODER_L_B, PIN_MOTOR_L, 2048, 600, 100, L_LPF, L_KP, L_KI, L_KD, CUGO_L_reverse);
   // RIGHTインスタンス有効化
-  cugo_motor_controllers[MOTOR_RIGHT] = MotorController(PIN_ENCODER_R_A, PIN_ENCODER_R_B, PIN_MOTOR_R, 2048, 600, 100, R_LPF, R_KP, R_KI, R_KD, R_reverse);
+  cugo_motor_controllers[MOTOR_RIGHT] = MotorController(PIN_ENCODER_R_A, PIN_ENCODER_R_B, PIN_MOTOR_R, 2048, 600, 100, R_LPF, R_KP, R_KI, R_KD, CUGO_R_reverse);
   // エンコーダカウンタは純正のハードウェア割り込みピンを使用
   attachInterrupt(digitalPinToInterrupt(PIN_ENCODER_L_A), cugoLeftEncHandler, RISING);
   attachInterrupt(digitalPinToInterrupt(PIN_ENCODER_R_A), cugoRightEncHandler, RISING);

@@ -3,8 +3,8 @@
 
 /***** ↓必要に応じて各ユーザーごとに設定可能↓ *****/
 // 回転方向ソフトウェア切り替え
-const bool L_reverse = false;
-const bool R_reverse = true;
+const bool CUGO_L_reverse = false;
+const bool CUGO_R_reverse = true;
 // joshibi: L:True, R:false
 // cugo-chan: L:false, R:True
 /***** ↑必要に応じて各ユーザーごとに設定可能↑ *****/
@@ -39,15 +39,15 @@ volatile unsigned long long cugoButtonTime;
 
 /*
 MotorController cugo_motor_controllers[MOTOR_NUM] = {
-  MotorController(PIN_ENCODER_L_A, PIN_ENCODER_L_B, PIN_MOTOR_L, 2048, 600, 100, L_LPF, L_KP, L_KI, L_KD, L_reverse),
-  MotorController(PIN_ENCODER_R_A, PIN_ENCODER_R_B, PIN_MOTOR_R, 2048, 600, 100, R_LPF, R_KP, R_KI, R_KD, R_reverse)
+  MotorController(PIN_ENCODER_L_A, PIN_ENCODER_L_B, PIN_MOTOR_L, 2048, 600, 100, L_LPF, L_KP, L_KI, L_KD, CUGO_L_reverse),
+  MotorController(PIN_ENCODER_R_A, PIN_ENCODER_R_B, PIN_MOTOR_R, 2048, 600, 100, R_LPF, R_KP, R_KI, R_KD, CUGO_R_reverse)
 };
 */
 
 // LEFTインスタンス有効化
-//  cugo_motor_controllers[MOTOR_LEFT] = MotorController(PIN_ENCODER_L_A, PIN_ENCODER_L_B, PIN_MOTOR_L, 2048, 600, 100, L_LPF, L_KP, L_KI, L_KD, L_reverse);
+//  cugo_motor_controllers[MOTOR_LEFT] = MotorController(PIN_ENCODER_L_A, PIN_ENCODER_L_B, PIN_MOTOR_L, 2048, 600, 100, L_LPF, L_KP, L_KI, L_KD, CUGO_L_reverse);
 // RIGHTインスタンス有効化
-//  cugo_motor_controllers[MOTOR_RIGHT] = MotorController(PIN_ENCODER_R_A, PIN_ENCODER_R_B, PIN_MOTOR_R, 2048, 600, 100, R_LPF, R_KP, R_KI, R_KD, R_reverse);
+//  cugo_motor_controllers[MOTOR_RIGHT] = MotorController(PIN_ENCODER_R_A, PIN_ENCODER_R_B, PIN_MOTOR_R, 2048, 600, 100, R_LPF, R_KP, R_KI, R_KD, CUGO_R_reverse);
 
 /*-----------------------------------------------*/
 /*MiddleUser向け関数*/
