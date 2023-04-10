@@ -17,16 +17,14 @@
 /*****************CugoArduinoBeginnerProgramming ver1.00*********************/
 /****************************************************************************
  * CugoArduinoMiddleUserProgrammingをご利用される方へ
- *  詳細はREADME.mdをご確認ください。
+ *  詳細はクイックリファレンス.mdをご確認ください。
  ****************************************************************************/
 #include <Arduino.h>
 #include "CugoArduinoMiddle.h"
 
-
-//利用するモーターの宣言
-MotorController cugo_motor_controllers[MOTOR_NUM];
-
-//プロトタイプ宣言
+//利用するMotorControllerクラスの宣言
+MotorController cugo_motor_controllers[CUGO_MOTOR_NUM];
+//初期化関数
 void(*resetFunc)(void) = 0;
 
 // 距離センサをりようするサンプルプログラム用
@@ -40,134 +38,109 @@ void setup()
 
 void loop()
 {
-  cugo_check_mode_change(cugo_motor_controllers);
-  if (cugoRunMode == CUGO_RC_MODE){
-    if((cugoRcTime[0] < CUGO_PROPO_MAX && cugoRcTime[0] > CUGO_PROPO_MIN) && (cugoRcTime[2] < CUGO_PROPO_MAX && cugoRcTime[2] > CUGO_PROPO_MIN) ){    
-    cugo_rcmode(cugoRcTime,cugo_motor_controllers);//RC（ラジコン）操作   
-    }
+  cugo_check_mode_change(cugo_motor_controllers);//ラジコンモードと自動走行モードの切り替わり確認
+  if(cugoRunMode == CUGO_RC_MODE){//ラジコンモード
+    cugo_rcmode(cugoRcTime,cugo_motor_controllers);   
   }
-  if (cugoRunMode == CUGO_ARDUINO_MODE){//ここから自動走行モードの記述 //★Arduinomodeではなくself-driveが良い？
-  //サンプルコード記載
+  if(cugoRunMode == CUGO_ARDUINO_MODE){//自動走行モード
+    cugoRunMode = CUGO_RC_MODE; //自動走行モードを1回のloopで終了してラジコンモードへ移行したい場合はCUGO_RC_MODEを入力し、自動走行モードを繰り返し実行したい場合はCUGO_ARDUINO_MODEを入力
+    //ここから自動走行モードの記述
   
-  //試験プログラムパターン①
-  
-  Serial.println("自動走行モード開始");
-  unsigned long int cugo_test_start = micros();  
-  //試験用関数記載
-  //cugo_wait(4500000);
-  cugo_wait(4200000);
-  //cugo_curve_theta_raw(-1.0,90,90,cugo_motor_controllers);
-  //cugo_curve_distance_raw(100,50,90,cugo_motor_controllers);
-  //cugo_move_forward(300.0,cugo_motor_controllers);
-  //cugo_turn_clockwise(-90,cugo_motor_controllers);       
-  ///cugo_turn_counterclockwise(5400,180,cugo_motor_controllers);       
-  Serial.print("Ach::" + String(cugo_check_propo_channel_value(0))+"  Bch::" + String(cugo_check_propo_channel_value(1))+ "  Cch::" + String(cugo_check_propo_channel_value(2))); 
-  //Serial.println("処理時間(micros)" + String(micros()-cugo_test_start)); 
-  Serial.println("  処理時間(micros)" + String(micros()));   
-  //cugo_wait(1000);
-  Serial.println("自動走行モード終了"); 
-  cugoRunMode = CUGO_ARDUINO_MODE; //自動走行モードをループしたい場合はCUGO_ARDUINO_MODEに変更
-  
-   
-  //試験プログラムパターン②
-  /*
-  unsigned long int cugo_test_start = micros();  
-  //試験用関数記載
-  Serial.println("Ach::" + String(cugo_check_propo_channel_value(0))+"  Bch::" + String(cugo_check_propo_channel_value(1))+ "  Cch::" + String(cugo_check_propo_channel_value(2))); 
-
-  Serial.println("処理時間(micros)" + String(micros()-cugo_test_start)); 
-  cugo_wait(100);
-  cugoRunMode = CUGO_ARDUINO_MODE; //自動走行モードをループしたい場合はCUGO_ARDUINO_MODEに変更
-  */ 
-   
-  /* 
-  //試験プログラムパターン③
-  Serial.println("自動走行モード開始");  
-  unsigned long int cugo_test_start = micros();  
-  //試験用関数記載
-  //cugo_move_forward(1.0,cugo_motor_controllers); 
-  cugo_curve_theta_raw(0.3,540,180,cugo_motor_controllers);   
-  Serial.println("ボタンの押された回数" + String(cugo_check_button_times())); 
-  Serial.println("処理時間(micros)" + String(micros()-cugo_test_start)); 
-  cugo_wait(1000);
-
-  */
-  //cugoRunMode = CUGO_RC_MODE; //1周で止めたい場合はCUGO_RC_MODE、自動走行モードをループしたい場合はCUGO_ARDUINO_MODEに変更
-  //Serial.println("自動走行モード終了"); 
-  
+      //サンプルコード記載
+        Serial.println("自動走行モード開始");  
+        Serial.println("1.0mの正方形移動の実施");
+        
+        cugo_move_forward(1.0,cugo_motor_controllers);
+        cugo_wait(1000);
+        cugo_turn_clockwise(90,0,cugo_motor_controllers);
+        cugo_wait(1000);
+        cugo_move_forward(1.0,cugo_motor_controllers);
+        cugo_wait(1000);
+        cugo_turn_clockwise(90,0,cugo_motor_controllers);
+        cugo_wait(1000);
+        cugo_move_forward(1.0,cugo_motor_controllers);
+        cugo_wait(1000);
+        cugo_turn_clockwise(90,0,cugo_motor_controllers);
+        cugo_wait(1000);
+        cugo_move_forward(1.0,cugo_motor_controllers);
+        cugo_wait(1000);
+        cugo_turn_clockwise(90,0,cugo_motor_controllers);
+        cugo_wait(1000);
+        Serial.println("自動走行モード終了");
+      //サンプルコード終了
+       
+    //ここまで自動走行モードの記述  
   }
 }
 
 //割り込み処理
 ISR(PCINT2_vect)
 { 
-  if (OLD_PWM_IN_PIN0_VALUE != digitalRead(PWM_IN_PIN0))
+  //PROPO Achの割り込み
+  if (CUGO_OLD_PWM_IN_PIN0_VALUE != digitalRead(CUGO_PWM_IN_PIN0))
   {
-    if (LOW == OLD_PWM_IN_PIN0_VALUE)
+    if (LOW == CUGO_OLD_PWM_IN_PIN0_VALUE)
     { // 立ち上がり時の処理
-      PIN_UP(0);
+      CUGO_PIN_UP(0);
     }
     else
     { // 立下り時の処理
-      PIN_DOWN(0);
+      CUGO_PIN_DOWN(0);
     }
-    OLD_PWM_IN_PIN0_VALUE = OLD_PWM_IN_PIN0_VALUE ? LOW : HIGH;
+    CUGO_OLD_PWM_IN_PIN0_VALUE = CUGO_OLD_PWM_IN_PIN0_VALUE ? LOW : HIGH;
   }
-  if (OLD_PWM_IN_PIN1_VALUE != digitalRead(PWM_IN_PIN1))
+
+  //PROPO Bchの割り込み
+  if (CUGO_OLD_PWM_IN_PIN1_VALUE != digitalRead(CUGO_PWM_IN_PIN1))
   {  
-    if (LOW == OLD_PWM_IN_PIN1_VALUE)
+    if (LOW == CUGO_OLD_PWM_IN_PIN1_VALUE)
     { // 立ち上がり時の処理
-      PIN_UP(1);
+      CUGO_PIN_UP(1);
     }
     else
     { // 立下り時の処理
-      PIN_DOWN(1);//たおした瞬間にリセットになっているかを確認
-      if (CUGO_ARDUINO_MODE_IN < time[1] && CUGO_PROPO_MAX > time[1])
-      { //KOPPROのBchを左に倒すとモードフラグの変更
+      CUGO_PIN_DOWN(1);//たおした瞬間にリセットになっているかを確認
+      if (CUGO_ARDUINO_MODE_IN < cugo_time[1] && CUGO_PROPO_MAX > cugo_time[1])
+      { //KOPPROのBchを右に倒すと自動走行モードのフラグに切替　※cugo_check_mode_change以降で動作切替
         cugoRunMode = CUGO_ARDUINO_MODE;
       } 
-      if (CUGO_ARDUINO_MODE_OUT > time[1] && CUGO_PROPO_MIN < time[1])
-      { //KOPPROのBchを左に倒すとArduinoリセット
-        //★ここに来た時止めて異常値判定whileで止めるmillis()で取る
-        Serial.println(String(cugo_check_propo_channel_value(1)));
-        delay(10); 
-        //エンコーダー初期化で試す価値あり
+      if (CUGO_ARDUINO_MODE_OUT > cugo_time[1] && CUGO_PROPO_MIN < cugo_time[1])
+      { //KOPPROのBchを左に倒すとArduinoのリセット
         resetFunc();
       }       
     }
-    OLD_PWM_IN_PIN1_VALUE = OLD_PWM_IN_PIN1_VALUE ? LOW : HIGH;
+    CUGO_OLD_PWM_IN_PIN1_VALUE = CUGO_OLD_PWM_IN_PIN1_VALUE ? LOW : HIGH;
   }
-  if (OLD_PWM_IN_PIN2_VALUE != digitalRead(PWM_IN_PIN2))
+
+  //PROPO Cchの割り込み
+  if (CUGO_OLD_PWM_IN_PIN2_VALUE != digitalRead(CUGO_PWM_IN_PIN2))
   {
-    if (LOW == OLD_PWM_IN_PIN2_VALUE)
+    if (LOW == CUGO_OLD_PWM_IN_PIN2_VALUE)
     { // 立ち上がり時の処理
-      PIN_UP(2);
+      CUGO_PIN_UP(2);
     }
     else
     { // 立下り時の処理
-      PIN_DOWN(2);
+      CUGO_PIN_DOWN(2);
     }
-    OLD_PWM_IN_PIN2_VALUE = OLD_PWM_IN_PIN2_VALUE ? LOW : HIGH;
+    CUGO_OLD_PWM_IN_PIN2_VALUE = CUGO_OLD_PWM_IN_PIN2_VALUE ? LOW : HIGH;
   }
 
-  if(OLD_CMD_BUTTON_VALUE != digitalRead(CMD_BUTTON_PIN)){
-    if(LOW == OLD_CMD_BUTTON_VALUE){ // 立ち上がり時の処理
-      PIN_UP(3);
-      //PIN_DOWN(3);
-
-      cugo_button_check = false;//★ボタンはこれで判定でよいか？
+  //ボタン操作の割り込み
+  if (CUGO_OLD_CMD_BUTTON_VALUE != digitalRead(CUGO_CMD_BUTTON_PIN)){
+    if (LOW == CUGO_OLD_CMD_BUTTON_VALUE){ // 立ち上がり時の処理
+      cugo_button_check = false;
     }
     else{ // 立下り時の処理
-      PIN_DOWN(3);
-      PIN_UP(3);
+      CUGO_PIN_DOWN(3);
+      CUGO_PIN_UP(3);
       cugo_button_check = true;
-      if(CUGO_BUTTON_CHECK_BORDER < time[3] ){ 
+      if (CUGO_BUTTON_CHECK_BORDER < cugo_time[3] ){ 
           cugo_button_count++;
       }      
     }
-    OLD_CMD_BUTTON_VALUE = OLD_CMD_BUTTON_VALUE ? LOW : HIGH;
-  }
-    
+    CUGO_OLD_CMD_BUTTON_VALUE = CUGO_OLD_CMD_BUTTON_VALUE ? LOW : HIGH;
+  }    
 }
 
 //CUGOのセットアップ関連 
@@ -175,21 +148,21 @@ void cugo_setup()
 { //初期化実行
   cugo_init();
   // LEFTインスタンス有効化
-  cugo_motor_controllers[MOTOR_LEFT] = MotorController(PIN_ENCODER_L_A, PIN_ENCODER_L_B, PIN_MOTOR_L, 2048, 600, 100, L_LPF, L_KP, L_KI, L_KD, CUGO_L_reverse);
+  cugo_motor_controllers[CUGO_MOTOR_LEFT] = MotorController(CUGO_PIN_ENCODER_L_A, CUGO_PIN_ENCODER_L_B, CUGO_PIN_MOTOR_L, 2048, 600, 100, CUGO_L_LPF, CUGO_L_KP, CUGO_L_KI, CUGO_L_KD, CUGO_L_reverse);
   // RIGHTインスタンス有効化
-  cugo_motor_controllers[MOTOR_RIGHT] = MotorController(PIN_ENCODER_R_A, PIN_ENCODER_R_B, PIN_MOTOR_R, 2048, 600, 100, R_LPF, R_KP, R_KI, R_KD, CUGO_R_reverse);
+  cugo_motor_controllers[CUGO_MOTOR_RIGHT] = MotorController(CUGO_PIN_ENCODER_R_A, CUGO_PIN_ENCODER_R_B, CUGO_PIN_MOTOR_R, 2048, 600, 100, CUGO_R_LPF, CUGO_R_KP, CUGO_R_KI, CUGO_R_KD, CUGO_R_reverse);
   // エンコーダカウンタは純正のハードウェア割り込みピンを使用
-  attachInterrupt(digitalPinToInterrupt(PIN_ENCODER_L_A), cugoLeftEncHandler, RISING);
-  attachInterrupt(digitalPinToInterrupt(PIN_ENCODER_R_A), cugoRightEncHandler, RISING);
+  attachInterrupt(digitalPinToInterrupt(CUGO_PIN_ENCODER_L_A), cugoLeftEncHandler, RISING);
+  attachInterrupt(digitalPinToInterrupt(CUGO_PIN_ENCODER_R_A), cugoRightEncHandler, RISING);
   // 初期値でモータ指示。起動時に停止を入力しないと保護機能が働き、回りません。
   cugo_motor_direct_instructions(1500, 1500,cugo_motor_controllers); //直接停止命令を出す
   delay(100); // すぐに別の値でモータを回そうとするとガクガクするので落ち着くまで待つ。10ms程度でも問題なし。
 }
 //エンコーダー割り込み時の実行処理 
 void cugoLeftEncHandler(){
-  cugo_motor_controllers[MOTOR_LEFT].updateEnc();
+  cugo_motor_controllers[CUGO_MOTOR_LEFT].updateEnc();
 }
 //エンコーダー割り込み時の実行処理
 void cugoRightEncHandler(){
-  cugo_motor_controllers[MOTOR_RIGHT].updateEnc();
+  cugo_motor_controllers[CUGO_MOTOR_RIGHT].updateEnc();
 }
