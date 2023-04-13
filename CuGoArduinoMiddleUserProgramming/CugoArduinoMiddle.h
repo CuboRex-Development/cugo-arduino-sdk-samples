@@ -155,8 +155,8 @@
     void cugo_curve_distance_raw(float target_radius,float target_distance,float target_rpm,MotorController cugo_motor_controllers[CUGO_MOTOR_NUM]);
 
   //wait関数
-    void cugo_wait(unsigned long int wait_ms);
-    void cugo_long_wait(unsigned long int wait_seconds);
+    void cugo_wait(unsigned long long int  wait_ms);
+    void cugo_long_wait(unsigned long long int wait_seconds);
 
   //プロポ入力確認関数
     int cugo_check_propo_channel_value(int channel_number); 

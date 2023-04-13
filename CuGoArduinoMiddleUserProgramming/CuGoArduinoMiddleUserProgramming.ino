@@ -1,5 +1,5 @@
 /****************************************************************************
- * CugoArduinoBeginnerProgramming                                           *
+ * CugoArduinoMiddleUserProgramming                                           *
  *                                                                          *
  * Copyright [2022] [CuboRex.Inc]                                           *
  * Licensed under the Apache License, Version 2.0 (the “License”);          *
@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and      *
  * limitations under the License.                                           *
  ****************************************************************************/
-/*****************CugoArduinoBeginnerProgramming ver1.00*********************/
+/*****************CugoArduinoMiddleUserProgramming ver1.00*********************/
 /****************************************************************************
  * CugoArduinoMiddleUserProgrammingをご利用される方へ
  *  詳細はクイックリファレンス.mdをご確認ください。
@@ -48,8 +48,8 @@ void loop()
   
       //サンプルコード記載
         Serial.println("自動走行モード開始");  
-        Serial.println("1.0mの正方形移動の実施");
         
+        Serial.println("1.0mの正方形移動の実施");
         cugo_move_forward(1.0,cugo_motor_controllers);
         cugo_wait(1000);
         cugo_turn_clockwise(90,0,cugo_motor_controllers);
@@ -66,9 +66,11 @@ void loop()
         cugo_wait(1000);
         cugo_turn_clockwise(90,0,cugo_motor_controllers);
         cugo_wait(1000);
+
         Serial.println("自動走行モード終了");
+        
       //サンプルコード終了
-       
+
     //ここまで自動走行モードの記述  
   }
 }
