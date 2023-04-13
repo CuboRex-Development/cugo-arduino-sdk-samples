@@ -27,9 +27,6 @@ MotorController cugo_motor_controllers[CUGO_MOTOR_NUM];
 //初期化関数
 void(*resetFunc)(void) = 0;
 
-// 距離センサをりようするサンプルプログラム用
-#define PIN_SENSOR A3  //   距離センサ用PIN
-
 void setup()
 {
   Serial.begin(115200);
@@ -41,35 +38,36 @@ void loop()
   cugo_check_mode_change(cugo_motor_controllers);//ラジコンモードと自動走行モードの切り替わり確認
   if(cugoRunMode == CUGO_RC_MODE){//ラジコンモード
     cugo_rcmode(cugoRcTime,cugo_motor_controllers);   
-  }
-  if(cugoRunMode == CUGO_ARDUINO_MODE){//自動走行モード
-    cugoRunMode = CUGO_RC_MODE; //自動走行モードを1回のloopで終了してラジコンモードへ移行したい場合はCUGO_RC_MODEを入力し、自動走行モードを繰り返し実行したい場合はCUGO_ARDUINO_MODEを入力
+  }else if(cugoRunMode == CUGO_ARDUINO_MODE){//自動走行モード
     //ここから自動走行モードの記述
   
       //サンプルコード記載
         Serial.println(F("自動走行モード開始"));  
+        //cugo_wait(1000);
         
         Serial.println(F("1.0mの正方形移動の実施"));
         cugo_move_forward(1.0,cugo_motor_controllers);
         cugo_wait(1000);
-        cugo_turn_clockwise(90,0,cugo_motor_controllers);
+        cugo_turn_clockwise(90,cugo_motor_controllers);
         cugo_wait(1000);
         cugo_move_forward(1.0,cugo_motor_controllers);
         cugo_wait(1000);
-        cugo_turn_clockwise(90,0,cugo_motor_controllers);
+        cugo_turn_clockwise(90,cugo_motor_controllers);
         cugo_wait(1000);
         cugo_move_forward(1.0,cugo_motor_controllers);
         cugo_wait(1000);
-        cugo_turn_clockwise(90,0,cugo_motor_controllers);
+        cugo_turn_clockwise(90,cugo_motor_controllers);
         cugo_wait(1000);
         cugo_move_forward(1.0,cugo_motor_controllers);
         cugo_wait(1000);
-        cugo_turn_clockwise(90,0,cugo_motor_controllers);
+        cugo_turn_clockwise(90,cugo_motor_controllers);
         cugo_wait(1000);
-
+        
         Serial.println(F("自動走行モード終了"));
         
       //サンプルコード終了
+
+    cugoRunMode = CUGO_RC_MODE; //自動走行モードを1回のloopで終了してラジコンモードへ移行したい場合はCUGO_RC_MODEを入力し、自動走行モードを繰り返し実行したい場合はCUGO_ARDUINO_MODEを入力
 
     //ここまで自動走行モードの記述  
   }

@@ -10,7 +10,7 @@ const bool CUGO_R_reverse = true;
 /***** ↑必要に応じて各ユーザーごとに設定可能↑ *****/
 
 //モード切替関連
-  int cugoRunMode = CUGO_ARDUINO_MODE;
+  int cugoRunMode = CUGO_RC_MODE;
   int cugo_old_runmode = CUGO_ARDUINO_MODE;
 
 //モータ制御関連
@@ -80,7 +80,8 @@ void cugo_check_mode_change(MotorController cugo_motor_controllers[CUGO_MOTOR_NU
     cugo_reset_pid_gain(cugo_motor_controllers);
     cugo_motor_direct_instructions(1500, 1500,cugo_motor_controllers); //直接停止命令を出す
     cugo_wait(100); // すぐに別の値でモータを回そうとするとガクガクするので落ち着くまで待つ。10ms程度でも問題なし。    
-  }                       
+  } 
+                      
 }
 
 void cugo_wait(unsigned long long int  wait_ms){
@@ -855,7 +856,7 @@ void cugo_test(int test_number,MotorController cugo_motor_controllers[CUGO_MOTOR
   
   Serial.println(", 処理時間(micros)::" + String(micros()-cugo_test_start)); 
   cugo_wait(50);
-  cugoRunMode = CUGO_ARDUINO_MODE; //自動走行モードをループしたい場合はCUGO_ARDUINO_MODEに変更
+  cugoRunMode = CUGO_RC_MODE; //自動走行モードをループしたい場合はCUGO_ARDUINO_MODEに変更
    
   }
   if(test_number == 3){//試験プログラムパターン③
