@@ -56,15 +56,15 @@ void MotorController::driveMotor(){
   //Serial.println(String(speed_));
 
 /**
-  Serial.print("driveMotor: ");
+  Serial.print("driveMotor: "));
   Serial.print(servo_pin_);
-  Serial.print(",");
+  Serial.print(","));
   Serial.print(target_rpm_);
-  Serial.print(",");
+  Serial.print(","));
   Serial.print(enc_);
-  Serial.print(",");
+  Serial.print(","));
   Serial.print(rpm_);
-  Serial.print(",");
+  Serial.print(","));
   Serial.println(pulse_);
 */  
 }
@@ -190,7 +190,7 @@ void MotorController::calcRpm(){
     enc_ = prev_enc_;
   }
   //Serial.print(diff);
-  //Serial.print(",");
+  //Serial.print(","));
 
   if(diff == 0){ // 0割り回避
     rpm_nolpf = 0.0;
@@ -229,14 +229,14 @@ void MotorController::pidControl(){
   p = target_rpm_ - rpm_;
   i = prev_i_ + p;
   d = p - prev_p_;
-//  Serial.println("");
-//  Serial.println("i: " + String(i));
+//  Serial.println(F(""));
+//  Serial.println(F("i: " + String(i));
 
   // PID制御
   //Serial.print("target_rpm_: " + String(target_rpm_));
   //Serial.print("rpm_: " + String(rpm_));
   //Serial.print("prev_i_: " + String(prev_i_));
-  //Serial.println("prev_p_: " + String(prev_p_));  
+  //Serial.println(F("prev_p_: " + String(prev_p_));  
   speed_ = p * kp_ + i * ki_ + d * kd_;  
   
   // prev_ 更新
@@ -263,19 +263,19 @@ void MotorController::pidControl(){
 
 /*
   if(servo_pin_ == 6){
-    //Serial.print("pidControl: ");
+    //Serial.print("pidControl: "));
     //Serial.print(servo_pin_);
-    //Serial.print(",");
+    //Serial.print(","));
     Serial.print(p);
-    Serial.print(",");
+    Serial.print(","));
     Serial.print(i);
-    //Serial.print(",");
+    //Serial.print(","));
     //Serial.print(d);
-    //Serial.print(",");
+    //Serial.print(","));
     //Serial.print(prev_p_);
-    //Serial.print(",");
+    //Serial.print(","));
     //Serial.println(prev_i_);
-    Serial.print(",");
+    Serial.print(","));
     Serial.println(rpm_);
   }
   */
@@ -291,11 +291,11 @@ float MotorController::limitSpeed(){
   // speed_ を範囲内に調整
   if(speed_ > max_speed_){
     speed_ = max_speed_;
-    //Serial.println("更新+: " + String(speed_));
+    //Serial.println(F("更新+: " + String(speed_));
     return surplus;
   }else if(speed_ < -max_speed_) {
     speed_ = -max_speed_;
-    //Serial.println("更新-: " + String(speed_));
+    //Serial.println(F("更新-: " + String(speed_));
     return surplus;
   } else {
     return 0.0;

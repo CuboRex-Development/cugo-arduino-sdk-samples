@@ -47,9 +47,9 @@ void loop()
     //ここから自動走行モードの記述
   
       //サンプルコード記載
-        Serial.println("自動走行モード開始");  
+        Serial.println(F("自動走行モード開始"));  
         
-        Serial.println("1.0mの正方形移動の実施");
+        Serial.println(F("1.0mの正方形移動の実施"));
         cugo_move_forward(1.0,cugo_motor_controllers);
         cugo_wait(1000);
         cugo_turn_clockwise(90,0,cugo_motor_controllers);
@@ -67,7 +67,7 @@ void loop()
         cugo_turn_clockwise(90,0,cugo_motor_controllers);
         cugo_wait(1000);
 
-        Serial.println("自動走行モード終了");
+        Serial.println(F("自動走行モード終了"));
         
       //サンプルコード終了
 
