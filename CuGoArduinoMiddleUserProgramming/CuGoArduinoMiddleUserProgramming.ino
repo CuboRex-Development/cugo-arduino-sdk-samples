@@ -1,7 +1,7 @@
 /****************************************************************************
- * CugoArduinoMiddleUserProgramming                                           *
+ * CugoArduinoSDKSamples	                                            *
  *                                                                          *
- * Copyright [2022] [CuboRex.Inc]                                           *
+ * Copyright [2023] [CuboRex.Inc]                                           *
  * Licensed under the Apache License, Version 2.0 (the “License”);          *
  * you may not use this file except in compliance with the License.         *
  * You may obtain a copy of the License at                                  *
@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and      *
  * limitations under the License.                                           *
  ****************************************************************************/
-/*****************CugoArduinoMiddleUserProgramming ver1.00*********************/
+/*****************CugoArduinoSDKSamples ver1.00******************************/
 /****************************************************************************
- * CugoArduinoMiddleUserProgrammingをご利用される方へ
+ *  CugoArduinoSDKSamplesをご利用される方へ
  *  詳細はクイックリファレンス.mdをご確認ください。
  ****************************************************************************/
 #include <Arduino.h>
