@@ -43,7 +43,7 @@ void loop()
     cugo_test(2,cugo_motor_controllers);//テスト用関数
   
       //サンプルコード記載
-        /*
+        
         Serial.println(F("自動走行モード開始"));  
         //cugo_wait(1000);
         
@@ -66,10 +66,10 @@ void loop()
         cugo_wait(1000);
         
         Serial.println(F("自動走行モード終了"));
-        */
+        
       //サンプルコード終了
 
-    cugoRunMode = CUGO_ARDUINO_MODE; //自動走行モードを1回のloopで終了してラジコンモードへ移行したい場合はCUGO_RC_MODEを入力し、自動走行モードを繰り返し実行したい場合はCUGO_ARDUINO_MODEを入力
+    cugoRunMode = CUGO_RC_MODE; //自動走行モードを1回のloopで終了してラジコンモードへ移行したい場合はCUGO_RC_MODEを入力し、自動走行モードを繰り返し実行したい場合はCUGO_ARDUINO_MODEを入力
 
     //ここまで自動走行モードの記述  
   }
