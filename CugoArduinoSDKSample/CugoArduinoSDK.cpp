@@ -1,4 +1,4 @@
-#include "CugoArduinoMiddle.h"
+#include "CugoArduinoSDK.h"
 #include "Arduino.h"
 
 /***** ↓必要に応じて各ユーザーごとに設定可能↓ *****/
@@ -671,7 +671,7 @@ void cugo_rcmode(volatile unsigned long cugoRcTime[CUGO_PWM_IN_MAX],MotorControl
   //Serial.println(F("#   cugo_CUGO_RC_MODE"));//確認用  
   digitalWrite(LED_BUILTIN, LOW); // CUGO_RC_MODEでLED消灯
   // 値をそのままへESCへ出力する
-  if((cugoRcTime[0] < CUGO_PROPO_MAX && cugoRcTime[0] > CUGO_PROPO_MIN) && (cugoRcTime[2] < CUGO_PROPO_MAX && cugoRcTime[2] > CUGO_PROPO_MIN) ){
+  if((cugoRcTime[0] < CUGO_PROPO_MAX_A && cugoRcTime[0] > CUGO_PROPO_MIN_A) && (cugoRcTime[2] < CUGO_PROPO_MAX_C && cugoRcTime[2] > CUGO_PROPO_MIN_C) ){
     cugo_motor_direct_instructions(cugoRcTime[0], cugoRcTime[2],cugo_motor_controllers);
   }
   //★超えた値のパターン変更　max超えたとき　min超えたとき　

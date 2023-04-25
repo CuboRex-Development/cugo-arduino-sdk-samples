@@ -20,7 +20,7 @@
  *  詳細はクイックリファレンス.mdをご確認ください。
  ****************************************************************************/
 #include <Arduino.h>
-#include "CugoArduinoMiddle.h"
+#include "CugoArduinoSDK.h"
 
 //利用するMotorControllerクラスの宣言
 MotorController cugo_motor_controllers[CUGO_MOTOR_NUM];
@@ -40,8 +40,10 @@ void loop()
     cugo_rcmode(cugoRcTime,cugo_motor_controllers);   
   }else if(cugoRunMode == CUGO_ARDUINO_MODE){//自動走行モード
     //ここから自動走行モードの記述
+    cugo_test(2,cugo_motor_controllers);//テスト用関数
   
       //サンプルコード記載
+        /*
         Serial.println(F("自動走行モード開始"));  
         //cugo_wait(1000);
         
@@ -64,10 +66,10 @@ void loop()
         cugo_wait(1000);
         
         Serial.println(F("自動走行モード終了"));
-        
+        */
       //サンプルコード終了
 
-    cugoRunMode = CUGO_RC_MODE; //自動走行モードを1回のloopで終了してラジコンモードへ移行したい場合はCUGO_RC_MODEを入力し、自動走行モードを繰り返し実行したい場合はCUGO_ARDUINO_MODEを入力
+    cugoRunMode = CUGO_ARDUINO_MODE; //自動走行モードを1回のloopで終了してラジコンモードへ移行したい場合はCUGO_RC_MODEを入力し、自動走行モードを繰り返し実行したい場合はCUGO_ARDUINO_MODEを入力
 
     //ここまで自動走行モードの記述  
   }
@@ -100,11 +102,11 @@ ISR(PCINT2_vect)
     else
     { // 立下り時の処理
       CUGO_PIN_DOWN(1);//たおした瞬間にリセットになっているかを確認
-      if (CUGO_ARDUINO_MODE_IN < cugo_time[1] && CUGO_PROPO_MAX > cugo_time[1])
+      if (CUGO_ARDUINO_MODE_IN < cugo_time[1] && CUGO_PROPO_MAX_B > cugo_time[1])
       { //KOPPROのBchを右に倒すと自動走行モードのフラグに切替　※cugo_check_mode_change以降で動作切替
         cugoRunMode = CUGO_ARDUINO_MODE;
       } 
-      if (CUGO_ARDUINO_MODE_OUT > cugo_time[1] && CUGO_PROPO_MIN < cugo_time[1])
+      if (CUGO_ARDUINO_MODE_OUT > cugo_time[1] && CUGO_PROPO_MIN_B < cugo_time[1])
       { //KOPPROのBchを左に倒すとArduinoのリセット
         resetFunc();
       }       

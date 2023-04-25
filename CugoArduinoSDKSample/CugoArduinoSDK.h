@@ -1,4 +1,4 @@
-// CugoArduinoMiddleUserProgramming用ライブラリ
+//CugoArduinoSDKライブラリ
   #ifndef CUGOARDUINOMODE_H
   #define CUGOARDUINOMODE_H
 
@@ -84,8 +84,12 @@
     #define CUGO_MOTOR_RIGHT 1
 
 //各種閾値
-  #define CUGO_PROPO_MAX   1900  // ARDUINOモードに入るときの閾値(us) (1100~1900/中央1500)
-  #define CUGO_PROPO_MIN   1100  // ARDUINOモードに入るときの閾値(us) (1100~1900/中央1500)
+  #define CUGO_PROPO_MAX_A   2200  // ARDUINOモードに入るときの閾値(us) (1100~1900/中央1500)
+  #define CUGO_PROPO_MIN_A   800  // ARDUINOモードに入るときの閾値(us) (1100~1900/中央1500)
+  #define CUGO_PROPO_MAX_B   1900  // ARDUINOモードに入るときの閾値(us) (1100~1900/中央1500)
+  #define CUGO_PROPO_MIN_B   1100  // ARDUINOモードに入るときの閾値(us) (1100~1900/中央1500)
+  #define CUGO_PROPO_MAX_C   2200  // ARDUINOモードに入るときの閾値(us) (1100~1900/中央1500)
+  #define CUGO_PROPO_MIN_C   800  // ARDUINOモードに入るときの閾値(us) (1100~1900/中央1500)
   #define CUGO_ARDUINO_MODE_IN   1700  // ARDUINOモードに入るときの閾値(us) (1100~1900/中央1500)
   #define CUGO_ARDUINO_MODE_OUT  1300  // ARDUINOモードから抜けるときの閾値(us) (1100~1900/中央1500)
   #define CUGO_EXCEPTION_NO -32768 //int下限
@@ -97,7 +101,7 @@
   #define CUGO_PIN_DOWN(no)  cugo_time[no] = micros() - cugoUpTime[no]
   #define CUGO_PWM_IN_MAX  4
 
-// グローバル変数宣言※関数はCugoArduinoMiddle.cppに記載
+// グローバル変数宣言※関数はCugoArduinoSDK.cppに記載
   extern int cugo_old_runmode;
   extern int cugo_button_count;
   extern long int cugo_count_prev_L;
