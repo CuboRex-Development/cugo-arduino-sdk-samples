@@ -39,9 +39,7 @@ void loop()
   if(cugoRunMode == CUGO_RC_MODE){//ラジコンモード
     cugo_rcmode(cugoRcTime,cugo_motor_controllers);   
   }else if(cugoRunMode == CUGO_ARDUINO_MODE){//自動走行モード
-    //ここから自動走行モードの記述
-    cugo_test(2,cugo_motor_controllers);//テスト用関数
-  
+    //ここから自動走行モードの記述  
       //サンプルコード記載
         
         Serial.println(F("自動走行モード開始"));  
