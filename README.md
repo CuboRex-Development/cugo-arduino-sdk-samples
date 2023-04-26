@@ -1,4 +1,7 @@
-CugoArduinoSDKSampleクイックリファレンス
+# CugoArduinoSDKSampleクイックリファレンス
+
+初心者向けサンプルコードや組み立て方はこちらをご参照ください  
+https://github.com/CuboRex-Development/cugo-arduino-beginner-programming
 <!-- クイックリファレンス はじめ-->
 
 ## 目次
