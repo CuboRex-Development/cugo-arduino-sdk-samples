@@ -1,4 +1,6 @@
 # CugoArduinoSDKSampleクイックリファレンス
+新製品のクローラロボット開発プラットフォームをご利用の方はこちらをご覧ください</br>
+https://github.com/CuboRex-Development/cugo-sdk-samples/tree/pico
 
 初心者向けサンプルコードや組み立て方はこちらをご参照ください  
 https://github.com/CuboRex-Development/cugo-arduino-beginner-programming
