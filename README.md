@@ -1,9 +1,13 @@
 # CugoSDKSampleコマンドリファレンス
-
-初心者向けサンプルコードはこちらをご参照ください  
+クローラロボット開発プラットフォームの初心者向けサンプルコードはこちらをご参照ください</br>
 https://github.com/CuboRex-Development/cugo-arduino-beginner-programming
+
+旧製品のArduinoKitの方はこちらをご覧ください。</br>
+https://github.com/CuboRex-Development/cugo-sdk-samples/tree/uno
+
 <!-- クイックリファレンス はじめ-->
 
+<!--
 ## 目次
 - [1. はじめに](#1-はじめに)
 - [2. 使い方](#2-使い方)
@@ -22,13 +26,118 @@ https://github.com/CuboRex-Development/cugo-arduino-beginner-programming
   - [3-3. その他](#3-3-その他)
     - [cugo\_setup](#cugo_init)→★initに変更
     - [cugo\_motor\_direct\_instructions](#cugo_motor_direct_instructions)
-
+-->
 <a id="anchor1"></a>
 
-# 1. はじめに
-- CuGoSDKSampleに関するクイックリファレンスです。CuGoSDKSampleを利用してCuGoを動かす上での各種関数等を説明します。
-- CuGoSDKSampleを動かすための事前準備は以下を参考にしてください
-  - [クローラロボット開発プラットフォームアップグレード説明書]→★変更(https://github.com/CuboRex-Development/cugo-arduino-beginner-programming/blob/462fc9e3d52d90777aff0116ad4912cc0e54ffc5/manuals/ArduinoKit%E3%82%A2%E3%83%83%E3%83%95%E3%82%9A%E3%82%AF%E3%82%99%E3%83%AC%E3%83%BC%E3%83%88%E3%82%99%E8%AA%AC%E6%98%8E%E6%9B%B8.pdf)
+## 1. はじめに
+これはクローラロボット開発プラットフォームをより発展的に使うために、さまざまな便利関数をまとめたサンプルコードです。CuGoを動かす各種関数等を説明します。
+
+![V4メイン](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/e1b76ade-498c-49db-9c62-2013c0201fa4)
+
+## 2. 準備
+クローラロボット開発プラットフォームの利用開始までの手順を説明します。
+
+### 2-1. Arduino IDEのインストール
+1. 公式ページ( https://www.arduino.cc/en/software )へ移動
+2. DOWNLOAD OPTIONSからご自身のOSのバージョンを選択
+3. JUST DOWNLOADかCONTRIBUTE & DOWNLOADを選択
+4. ダウンロードされたらファイルを実行して指示に従いインストール
+### 2-2. 学習用ソースコードダウンロード
+1. Codeボタンを選択し、Download ZIPをクリックしてダウンロード
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/ea21aa32-1b2e-4d48-852d-678ad300485b)
+
+2. ダウンロードしたファイルを解凍
+3. CugoSDKSample.inoをダブルクリックし、Arduino IDEを起動
+
+### 2-3. Rasberry Pi Picoの初期設定
+Arduino IDE でRaspberryPiPicoに書き込む場合、IDEにRaspberryPiPicoのボード情報をあらかじめ取得する必要があります。</br>
+
+Arduino IDE バージョン2系（最新版）の場合
+
+1. ファイル ＞ 環境設定を選択</br>
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/f08cbb59-36f2-4ba0-80a3-889a7c337e0f)
+
+2. 追加のボードマネージャのURLに以下のURLを入力し、OKを押します。右のウィンドウボタンをクリックすると入力できるようになります。</br>
+https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json</br>
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/fc20fa37-3747-4060-8da3-9ae169b9df93)
+
+4. ツール ＞ ボード ＞ ボードマネージャ…を選択
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/320f1434-1135-4788-8b6e-df6194c24781)
+
+5. "pico"で検索し、”Raspberry Pi Pico/RP2040”を見つけます。”INSTALL”ボタンを押します（すでに入っている場合はUPDATEボタンを押して最新にします）。
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/98a99647-b980-4e2b-aec4-b91b3419649b)
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/f5135740-f1cb-436a-8d63-f68a6cd3122f)
+
+6. スケッチ ＞ ライブラリをインクルード… ＞ ライブラリを管理…を選択
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/1e1775bd-3399-4f40-82d8-8d5590d21918)
+
+7. RPi_Pico_TimerInterrupt.hで検索し、”RPI_PICO_TimerInterrupt”を見つけます。”INSTALL”ボタンを押します（すでに入っている場合はUPDATEボタンを押して最新にします）。
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/1216aeee-82ef-4b6a-8cab-25935b4cab82)
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/d236d67f-2156-4f86-a9bd-0e3b68070bc9)
+
+
+
+
+Arduino IDE バージョン1.8.19（レガシー）の場合
+
+<details>
+1. ファイル ＞ 環境設定を選択</br>
+
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/f86d603a-0910-4281-a71f-8a6cde1fee40)
+
+
+2. 追加のボードマネージャのURLに以下のURLを入力し、OKを押します。右のウィンドウボタンをクリックすると入力できるようになります。</br>
+https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json</br>
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/0b957362-a55b-4591-a8e7-7bb681eed5a0)
+
+4. ツール ＞ ボード ＞ ボードマネージャ…を選択
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/ac1f3c62-d372-4bab-ae1a-3f9090a69e10)
+
+
+5. "pico"で検索し、”Raspberry Pi Pico/RP2040”を見つけます。”インストール”ボタンを押します（すでに入っている場合は"更新"ボタンを押して最新にします）。
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/6341088e-1532-4c35-85d6-fcca6491ac46)
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/be7e4e8c-fc26-4fa0-9182-6f0392029942)
+
+
+6. スケッチ ＞ ライブラリをインクルード… ＞ ライブラリを管理…を選択
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/cf2bb2d8-17b1-4421-8b2a-f86456e95f83)
+
+
+7. RPi_Pico_TimerInterrupt.hで検索し、”RPI_PICO_TimerInterrupt”を見つけます。”インストール”ボタンを押します（すでに入っている場合は"更新"ボタンを押して最新にします）。
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/af765969-7bbd-4d24-8ce6-1c5496885bd2)
+
+
+</details>
+
+### 2-4. Rasberry Pi Picoへの書き込み
+
+1. CugoBeginnerProgramming.inoがArduino IDEで開かれていることを確認
+2. USBケーブルでパソコンとRaspberry Pi Picoを接続。PCに認識されないときは基板にある”BOOTSEL”ボタンを押しながらPCに挿してください。</br>
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/483c2a4e-8850-4924-90de-a17b09dd775f)
+
+4. ツール ＞ ボード ＞ Raspberry Pi Pico/RP2040 ＞ Rasberry Pi Pico を選択
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/db962aa7-1deb-4125-a7f9-eec2b2707433)
+
+6. ツール ＞ ポート からRasberry Pi Picoのポートを選択します。ポートはUSBを接続する前と後を比較して増えたものがRaspberry Pi Picoなので、それを選択します。</br>
+USBを接続する前↓</br>
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/02be584c-bd9d-4c96-a9dc-0bca2dbb5e5a)
+
+USBを接続した後↓</br>
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/50e47ad7-b85d-4dd5-82ba-f441ba3da83d)
+
+8. 矢印ボタン " → "を選択し、マイコンボードへ書き込むを実行</br>
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/a7bd9db9-d3d0-4221-963a-2bff952eb833)
+
+9. ボードへの書き込みが完了しましたの記載があれば書き込み完了です。
+
+### 2-5. LD-2のコマンドモードを有効化
+クローラロボット開発プラットフォームでは、安全のため、出荷時にプログラム動作する、コマンドモードを無効化しています。</br>
+以下の図に従って、電源が切れていることを確認し、DIPスイッチの2番をON側に倒してください。大変小さなスイッチですので、つまようじなどを用意して操作してください。</br>
+詳細は、取扱説明書をご覧ください。</br>
+https://drive.google.com/drive/folders/18MQUVMLYS_4JgkeGd2v7dVHmdmFaMaZc?usp=drive_link
+
+![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/fca21c7a-01e0-45cb-9bff-3d91ef784300)
+
 
 ★リンクではなくbeginnerの同じMDファイルを格納する　
   - [クローラロボット開発プラットフォームクイックスタートガイド](https://github.com/CuboRex-Development/cugo-arduino-beginner-programming/blob/main/README.md#cugoarduinokit%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88%E3%82%AC%E3%82%A4%E3%83%89)
@@ -39,7 +148,7 @@ https://github.com/CuboRex-Development/cugo-arduino-beginner-programming
 
 <a id="anchor2"></a>
 
-# 2. 使い方
+## 3. 使い方
 
 - CuGoSDKSampleにて自作関数を利用する場合は`loop`内の `//ここから自動走行モードの記述`から `//ここまで自動走行モードの記述`までに記載してください。
 
@@ -65,7 +174,7 @@ void loop() {
 ```
 <a id="anchor2-1"></a>
 
-## 2-1. 自動走行モード関数例
+### 3-1. 自動走行モード関数例
 
 - 正方形に移動させたい場合は下記コードを参考にしてください
 
@@ -149,11 +258,11 @@ void loop() {
 
 <a id="anchor3"></a>
 
-# 3. 各種関数
+## 4. 各種関数
 
 <a id="anchor3-1"></a>
 
-## 3-1. 自動走行関連
+### 4-1. 自動走行関連
 <a id="anchor3-1-1"></a>
 
 ### cugo_move_forward
@@ -267,7 +376,7 @@ void loop() {
 
 <a id="anchor3-2"></a>
 
-## 3-2. 各種センサ取得関連
+### 4-2. 各種センサ取得関連
 
 <a id="anchor3-2-1"></a>
 
@@ -285,7 +394,7 @@ void loop() {
 
 <a id="anchor3-3"></a>
 
-## 3-3. その他
+### 4-3. その他
 
 <a id="anchor3-3-1"></a>
 
