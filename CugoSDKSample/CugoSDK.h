@@ -8,13 +8,20 @@
 
 //各種定数
   //cugo仕様関連
+    // CuGo V4のパラメータ
     #define CUGO_WHEEL_RADIUS_L  0.03858d
     #define CUGO_WHEEL_RADIUS_R  0.03858d
     #define CUGO_TREAD  0.380d
-    #define CUGO_ENCODER_RESOLUTION  360.0d 
-    #define CUGO_MAX_MOTOR_RPM 180    //モータの速度上限値
-    #define CUGO_NORMAL_MOTOR_RPM 90  //通常速度の設定値
-
+    #define CUGO_ENCODER_RESOLUTION  600.0d
+    #define CUGO_MAX_MOTOR_RPM  130    //モータの速度上限値
+    #define CUGO_NORMAL_MOTOR_RPM  90  //通常速度の設定値
+    // CuGo V3iのパラメータ
+    // #define CUGO_WHEEL_RADIUS_L  0.03858d
+    // #define CUGO_WHEEL_RADIUS_R  0.03858d
+    // #define CUGO_TREAD  0.376d
+    // #define CUGO_ENCODER_RESOLUTION  360.0d
+    // #define CUGO_MAX_MOTOR_RPM  180    //モータの速度上限値
+    // #define CUGO_NORMAL_MOTOR_RPM  90  //通常速度の設定値
 
   // PID位置制御のゲイン調整
     #define CUGO_L_COUNT_KP  50.0f
