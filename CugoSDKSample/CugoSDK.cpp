@@ -53,6 +53,7 @@ void(*resetFunc)(void) = 0;
 void cugo_init(){
 
   Serial.begin(115200, SERIAL_8N1);//PCとの通信
+  delay(1000);
   Serial1.begin(115200, SERIAL_8N1);//BLDCとの通信
 
   //ボタン関連
@@ -212,7 +213,7 @@ void cugo_move_pid(float target_rpm,bool use_pid){
     }
 
       //cugo_test時確認用
-      Serial.print("target_count L/R:" + String(cugo_target_count_L)+" ,"+ String(cugo_target_count_R));
+      //Serial.print("target_count L/R:" + String(cugo_target_count_L)+" ,"+ String(cugo_target_count_R));
 
 
     while(!cugo_check_count_achievement(CUGO_MOTOR_LEFT) || !cugo_check_count_achievement(CUGO_MOTOR_RIGHT)){  
@@ -263,7 +264,7 @@ void cugo_move_pid(float target_rpm,bool use_pid){
     }
         
     //cugo_test時確認用
-      Serial.println("result_count L/R:" + String(cugo_current_count_L)+" ,"+ String(cugo_current_count_R));
+      //Serial.println("result_count L/R:" + String(cugo_current_count_L)+" ,"+ String(cugo_current_count_R));
     
     //Serial.println(F("result_odometer x,y,degree:" + String(cugo_check_odometer(CUGO_ODO_X))+" ,"+ String(cugo_check_odometer(CUGO_ODO_Y))+" ,"+ String(cugo_check_odometer(CUGO_ODO_THETA)));      
     //Serial.println(F("result_count l:r:" + String(     .getCount())+" ,"+ String(     .getCount()));
@@ -378,7 +379,7 @@ void cugo_curve_theta_raw(float target_radius,float target_degree,float target_r
      
     //cugo_test時確認用
       //cugo_test時確認用
-        Serial.print("target_count L/R:" + String(cugo_target_count_L)+" ,"+ String(cugo_target_count_R));
+        //Serial.print("target_count L/R:" + String(cugo_target_count_L)+" ,"+ String(cugo_target_count_R));
 
     while(!cugo_check_count_achievement(CUGO_MOTOR_LEFT) || !cugo_check_count_achievement(CUGO_MOTOR_RIGHT)){  
       if(cugo_target_count_L == 0 && cugo_target_count_R == 0){
@@ -397,7 +398,7 @@ void cugo_curve_theta_raw(float target_radius,float target_degree,float target_r
     }
        
     //cugo_test時確認用
-    Serial.println("result_count L/R:" + String(cugo_current_count_L)+" ,"+ String(cugo_current_count_R));
+    //Serial.println("result_count L/R:" + String(cugo_current_count_L)+" ,"+ String(cugo_current_count_R));
         
   }
     cugo_stop(); 
@@ -468,7 +469,7 @@ void cugo_curve_distance_raw(float target_radius,float target_distance,float tar
 
 
       //cugo_test時確認用
-      Serial.print("target_count L/R:" + String(cugo_target_count_L)+" ,"+ String(cugo_target_count_R));
+      //Serial.print("target_count L/R:" + String(cugo_target_count_L)+" ,"+ String(cugo_target_count_R));
 
       //   
       while(!cugo_check_count_achievement(CUGO_MOTOR_LEFT) || !cugo_check_count_achievement(CUGO_MOTOR_RIGHT)){  
@@ -489,7 +490,7 @@ void cugo_curve_distance_raw(float target_radius,float target_distance,float tar
       }
       
       //cugo_test時確認用    
-      Serial.println("result_count L/R:" + String(cugo_current_count_L)+" ,"+ String(cugo_current_count_R));
+      //Serial.println("result_count L/R:" + String(cugo_current_count_L)+" ,"+ String(cugo_current_count_R));
       /*  
       //Serial.println(F("result_odometer x,y,degree:" + String(cugo_check_odometer(CUGO_ODO_X))+" ,"+ String(cugo_check_odometer(CUGO_ODO_Y))+" ,"+ String(cugo_check_odometer(CUGO_ODO_THETA)));      
       Serial.println(F("result_count l:r:" + String(     .getCount())+" ,"+ String(     .getCount()));
@@ -675,25 +676,6 @@ void cugo_init_display(){
   //delay(30);
   cugo_wait(30);
 
-  /*  
-  Serial.println(F(""));
-  Serial.println(F(""));  
-  Serial.println(F("#######################################"));
-  Serial.println(F("#######################################"));
-  Serial.println(F("#                                     #"));
-  Serial.println(F("#   ####    ##  ##    ####     ####   #"));
-  Serial.println(F("#  ##  ##   ##  ##   ##  ##   ##  ##  #"));
-  Serial.println(F("#  ##       ##  ##   ##       ##  ##  #"));
-  Serial.println(F("#  ##       ##  ##   ## ###   ##  ##  #"));
-  Serial.println(F("#  ##       ##  ##   ##  ##   ##  ##  #"));
-  Serial.println(F("#  ##  ##   ##  ##   ##  ##   ##  ##  #"));
-  Serial.println(F("#   ####     ####     ####     ####   #"));
-  Serial.println(F("#                                     #"));
-  Serial.println(F("#######################################"));
-  Serial.println(F("#######################################"));
-  Serial.println(F(""));
-  Serial.println(F(""));  
-  */
   Serial.println(F("###############################"));  
   Serial.println(F("###   CugoAruduinoKitStart  ###"));
   Serial.println(F("###############################"));  
@@ -1567,13 +1549,19 @@ void  ld2_get_cmd() {  //引数はidとチェックサム以外の配列
     if (frame[1] == 0x80){  //5.5.1 Control Mode Feedback
       if(frame[2] == 0x00){
         if(cugo_switching_reset){
-          cugo_reset();
+          if(cugo_old_runmode == CUGO_CMD_MODE){
+            //Serial.println(F("###   RESETTING........     ###"));
+            cugo_reset();
+          }else if(cugo_old_runmode == CUGO_RC_MODE){
+            cugo_runmode = CUGO_RC_MODE;
+          }else{
+          }
         }else{
           if(cugo_old_runmode == CUGO_CMD_MODE){
             cugo_runmode = CUGO_RC_MODE;
             cugo_old_runmode = CUGO_RC_MODE;
-            Serial.println(F("###   MODE:CUGO_RC_MODE        ###"));
-  
+            Serial.println(F("###   MODE:CUGO_RC_MODE     ###"));
+
           }else if(cugo_old_runmode == CUGO_RC_MODE){
             cugo_runmode = CUGO_RC_MODE;
           }else{
@@ -1583,7 +1571,7 @@ void  ld2_get_cmd() {  //引数はidとチェックサム以外の配列
         if(cugo_old_runmode == CUGO_RC_MODE){
           cugo_runmode = CUGO_CMD_MODE;
           cugo_old_runmode = CUGO_CMD_MODE;
-          Serial.println(F("###   MODE:CUGO_CMD_MODE###"));          
+          Serial.println(F("###   MODE:CUGO_CMD_MODE    ###"));          
         }else if(cugo_old_runmode == CUGO_CMD_MODE){
           cugo_runmode = CUGO_CMD_MODE;
         }else{
@@ -1671,7 +1659,7 @@ void  ld2_set_control_mode(unsigned char mode) {  //mode 0x00:RC_mode 0x01:CMD_M
 }
 
 void cugo_reset() {
-    //SCB->AIRCR = (0x5FA << SCB_AIRCR_VECTKEY_Pos) | (SCB->AIRCR & SCB_AIRCR_PRIGROUP_Msk) | (1 << NVIC_SYSRESETREQ);
+    watchdog_reboot(0,0,0);    
     while (true);
 }
 

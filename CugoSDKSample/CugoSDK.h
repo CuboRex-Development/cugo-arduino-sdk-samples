@@ -4,6 +4,7 @@
 
 //インクルード関連 
   #include "RPi_Pico_TimerInterrupt.h"
+  #include "hardware/watchdog.h"
 
 //各種定数
   //cugo仕様関連

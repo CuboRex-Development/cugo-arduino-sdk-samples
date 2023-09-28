@@ -23,7 +23,7 @@
 #include "CugoSDK.h"
 
 void setup() {
-  cugo_switching_reset = false;
+  cugo_switching_reset = true;
   //プロポでラジコンモード切替時に初期化したい場合はtrue、初期化しない場合はfalse 
 
   cugo_init();//初期設定
