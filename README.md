@@ -1,4 +1,4 @@
-# CugoSDKSampleコマンドリファレンス
+# CuGoSDKSampleコマンドリファレンス
 クローラロボット開発プラットフォームの初心者向けサンプルコードはこちらをご参照ください</br>
 https://github.com/CuboRex-Development/cugo-arduino-beginner-programming
 
@@ -138,12 +138,6 @@ https://drive.google.com/drive/folders/18MQUVMLYS_4JgkeGd2v7dVHmdmFaMaZc?usp=dri
 
 ![image](https://github.com/CuboRex-Development/cugo-beginner-programming/assets/22425319/fca21c7a-01e0-45cb-9bff-3d91ef784300)
 
-
-★リンクではなくbeginnerの同じMDファイルを格納する　
-  - [クローラロボット開発プラットフォームクイックスタートガイド](https://github.com/CuboRex-Development/cugo-arduino-beginner-programming/blob/main/README.md#cugoarduinokit%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88%E3%82%AC%E3%82%A4%E3%83%89)
-    - ただし、クローラロボット開発プラットフォームクイックスタートガイドに記載のあるコマンドはbeginner用のため利用できません。
-    - CuGoSDKのコマンドは本ページの [3. 各種関数](#3-各種関数)
-をご利用ください。
 
 
 <a id="anchor2"></a>
