@@ -120,9 +120,11 @@ Arduino IDE上部タブから”CugoSDK.h”を選択
 https://github.com/CuboRex-Development/cugo-sdk-samples/blob/495630e56496518c560e93d79081504991ed0dac/CugoSDKSample/CugoSDK.h#L10-L24
 
 V4の場合</br>
+”CugoSDK.h”は、サンプルプログラムから変更する必要はありません。</br>
 ![image](https://github.com/CuboRex-Development/cugo-sdk-samples/assets/27883660/52f4ecd3-34ab-437b-9f02-a754207bd8a9)
 
 V3iの場合</br>
+”CugoSDK.h”の12行目から17行目をコメントアウトし、19行目から24行目のコメントアウトを解除します。</br>
 ![image](https://github.com/CuboRex-Development/cugo-sdk-samples/assets/27883660/2d2c337b-0508-4adc-baf2-e9bfe8a6111d)
 
 
