@@ -25,7 +25,7 @@ https://github.com/CuboRex-Development/cugo-sdk-samples/tree/uno
     - [cugo\_check\_odometer](#cugo_check_odometer)
   - [3-3. その他](#3-3-その他)
     - [cugo\_setup](#cugo_init)→★initに変更
-    - [cugo\_motor\_direct\_instructions](#cugo_motor_direct_instructions)
+    - [cugo\_motor\_direct\_instructions](#cugo_rpm_direct_instructions)
 -->
 <a id="anchor1"></a>
 
@@ -400,15 +400,15 @@ void loop() {
 
 <a id="anchor3-3-3"></a>
 
-### cugo_motor_direct_instructions
+### cugo_rpm_direct_instructions
 - 【説明】
   - モーターへプロポ入力します。
   - モーターを停止させたい場合は左右のパラメータに`0`を入力します。
 - 【構文】
-  - `cugo_motor_direct_instructions(int left, int right)` 
+  - `cugo_rpm_direct_instructions(float left, float right)` 
 - 【パラメータ】
-  - `left` 左モーターへのプロポ入力値
-  - `right` 右モーターへのプロポ入力値
+  - `left` 左モーターへの入力値(RPM)
+  - `right` 右モーターへの入力値(RPM)
 - 【戻り値】
   - なし
 <!-- ★チェック-->

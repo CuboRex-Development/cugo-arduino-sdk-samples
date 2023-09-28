@@ -4,8 +4,6 @@
 
 RPI_PICO_Timer ITimer0(0);
 
-void(*resetFunc)(void) = 0;
-
 // グローバル変数宣言
   int cugo_old_runmode = CUGO_RC_MODE;
   int cugo_runmode = CUGO_RC_MODE;
@@ -53,7 +51,7 @@ void(*resetFunc)(void) = 0;
 void cugo_init(){
 
   Serial.begin(115200, SERIAL_8N1);//PCとの通信
-  delay(1000);
+  delay(1000);//LD-2起動待機
   Serial1.begin(115200, SERIAL_8N1);//BLDCとの通信
 
   //ボタン関連
@@ -219,7 +217,7 @@ void cugo_move_pid(float target_rpm,bool use_pid){
     while(!cugo_check_count_achievement(CUGO_MOTOR_LEFT) || !cugo_check_count_achievement(CUGO_MOTOR_RIGHT)){  
       if(cugo_target_count_L == 0 && cugo_target_count_R == 0)
       {
-              cugo_motor_direct_instructions(0,0);
+              cugo_rpm_direct_instructions(0,0);
       } else{
         if(use_pid){
           // 各制御値の計算
@@ -258,7 +256,7 @@ void cugo_move_pid(float target_rpm,bool use_pid){
         }
       }
       //Serial.println("gain l:r:" + String(l_count_gain)+" ,"+ String(l_count_gain));  
-      cugo_motor_direct_instructions(l_count_gain,r_count_gain);
+      cugo_rpm_direct_instructions(l_count_gain,r_count_gain);
       cugo_wait(10);
       cugo_calc_odometer();
     }
@@ -392,7 +390,7 @@ void cugo_curve_theta_raw(float target_radius,float target_degree,float target_r
       if(cugo_check_count_achievement(CUGO_MOTOR_RIGHT)){
         target_rpm_R = 0;
       }
-      cugo_motor_direct_instructions(target_rpm_L,target_rpm_R);
+      cugo_rpm_direct_instructions(target_rpm_L,target_rpm_R);
       cugo_wait(10);
       cugo_calc_odometer();
     }
@@ -483,7 +481,7 @@ void cugo_curve_distance_raw(float target_radius,float target_distance,float tar
       if(cugo_check_count_achievement(CUGO_MOTOR_RIGHT)){
         target_rpm_R = 0;
       }
-      cugo_motor_direct_instructions(target_rpm_L,target_rpm_R);
+      cugo_rpm_direct_instructions(target_rpm_L,target_rpm_R);
       cugo_wait(10);
       cugo_calc_odometer();
 
@@ -651,8 +649,8 @@ void cugo_calc_necessary_count(float distance) {
   //Serial.println(F("issyuu: " + String(2 * CUGO_WHEEL_RADIUS_R * PI));
 
   }
-void cugo_motor_direct_instructions(float left,float right){
-  //Serial.println(F("#   cugo_motor_direct_instructions"));//確認用
+void cugo_rpm_direct_instructions(float left,float right){
+  //Serial.println(F("#   cugo_rpm_direct_instructions"));//確認用
   //Serial.println("rpm  l:r:" + String(left)+" ,"+ String(right));  
   unsigned char frame[10] = { 0xFF, 0x02, 0, 0, 0, 0, 0, 0, 0, 0 };
   ld2_float_to_frame(left, 2, frame);

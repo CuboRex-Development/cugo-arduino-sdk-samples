@@ -86,7 +86,7 @@
     void cugo_reset();
 
   //モータ直接制御関連
-    void cugo_motor_direct_instructions(float left, float right);
+    void cugo_rpm_direct_instructions(float left, float right);
     void cugo_stop();
 
   //前進後進、回転、円軌道関数

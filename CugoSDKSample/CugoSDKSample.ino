@@ -43,7 +43,7 @@ void loop() {
                 
         Serial.println(F("自動走行モード開始"));  
         cugo_wait(1000);
-        
+
         Serial.println(F("1.0mの正方形移動の実施"));
         cugo_move_forward(1.0);
         cugo_wait(1000);
