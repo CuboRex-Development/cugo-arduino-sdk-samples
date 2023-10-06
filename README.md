@@ -187,9 +187,23 @@ https://drive.google.com/drive/folders/18MQUVMLYS_4JgkeGd2v7dVHmdmFaMaZc?usp=dri
 
 <a id="anchor2"></a>
 
-## 3. 使い方
 
+## 3. 使用方法
+クローラロボット開発プラットフォームでは2つのモードが利用できます
+### 3-1. ラジコンモードの利用
+ラジコンモードはCugoSDKSample.inoを書き込み後、付属のコントローラの左スティックを左側に倒すことでラジコンモードが開始します。 <br>
+![controller](https://user-images.githubusercontent.com/22425319/208835611-c366764d-4b30-477a-aac8-c848712c4710.png)
+
+ラジコンモードでの操作方法は<br>
+- 左スティックの上下操作が左クローラーの前進後進移動
+- 右スティックの上下操作が右クローラーの前進後進移動　<br>
+
+になります<br>
+![radiocontrol](https://user-images.githubusercontent.com/22425319/208835778-1dd170dc-3de1-4dce-b7ee-83f2c1e0838d.png)
+
+### 3-3. プログラムモードの利用
 - CuGoSDKSampleにて自作関数を利用する場合は`loop`内の `//ここから自動走行モードの記述`から `//ここまで自動走行モードの記述`までに記載してください。
+- loop()のif()により、ラジコンモードの実装とプログラムモードの実装を記載しております。このプログラムモードのブロック内を編集していください。
 
 ```c
 void loop() {
@@ -213,7 +227,30 @@ void loop() {
 ```
 <a id="anchor2-1"></a>
 
-### 3-1. 自動走行モード関数例
+### 3-4.  cugo_switching_resetについて
+プログラムモードでシーケンシャルに命令を設定している場合、プログラムを最初から実行したい場合があります。
+このとき、cugo_switching_reset = true;にすると、プログラムを毎回最初から実行させることができます（cugo_beginner_programmingと同じ動作）。デフォルトはfalseです。
+https://github.com/CuboRex-Development/cugo-sdk-samples/blob/c41dfb4b27d55c67f8fa3688d803e9d9be1ccdf3/CugoSDKSample/CugoSDKSample.ino#L25-L27
+
+
+cugo_switching_reset = false; の時
+![image](https://github.com/CuboRex-Development/cugo-sdk-samples/assets/22425319/68979e1f-b0ce-4257-ae60-2e087c0d1570)
+
+
+cugo_switching_reset = true; の時
+![image](https://github.com/CuboRex-Development/cugo-sdk-samples/assets/22425319/ba2c3099-aefe-4d01-83d2-b3fa7b473605)
+
+### 注意
+
+ウォッチドッグタイマを使用してプログラムをリセットしているため、再起動に3秒ほどかかります。
+ラジコンモード⇔プログラムモードの切り替えを素早く行うとプログラムモードが開始されないように感じることがあります。
+（ラジコンモードに切り替えてから、短い時間でプログラムモードに切り替えた時が対象）</br>
+このとき、確実にラジコンモードに切り替えた後、約3秒間待ってから、プログラムモードに切り替える操作（スティックを右に倒す）をしてください。</br>
+
+なお、ラジコン操作は下位システムが常に制御をしているため、RaspberryPiPicoが再起動している間も操作をすることができますので、ご安心ください。
+
+
+### 3-5. 自動走行モード関数例
 
 - 正方形に移動させたい場合は下記コードを参考にしてください
 
